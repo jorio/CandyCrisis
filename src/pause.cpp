@@ -1040,7 +1040,7 @@ void HandleDialog( int type )
 	// Get some graphics that we're going to need
 	logoSurface      = LoadPICTAsSurface( picLogo, 32 );
 	logoAlphaSurface = LoadPICTAsSurface( picLogoAlpha, 32 );
-	logoMaskSurface  = LoadPICTAsSurface( picLogoMask, 1 );
+	logoMaskSurface  = LoadPICTAsSurface( picLogoMask, MASK_DEPTH );
 
 	// Get a copy of the current game window contents
 	backSurface      = SDLU_InitSurface( &fullSDLRect, 32 );

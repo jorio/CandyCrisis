@@ -117,7 +117,6 @@ void SurfaceBlitMask( SDL_Surface* object,     SDL_Surface* mask,     SDL_Surfac
                       const MRect*  objectRect, const MRect*  maskRect, const MRect*  destRect )
 {
 	int            startX = 0, startY = 0, endX, endY, x, y, srcRowBytes, mskRowBytes, dstRowBytes;
-	unsigned int   bit, startBit, maskBits;
 	unsigned char *src, *msk, *dst;
 	MRect          destBounds;
 
@@ -142,7 +141,7 @@ void SurfaceBlitMask( SDL_Surface* object,     SDL_Surface* mask,     SDL_Surfac
 	dstRowBytes = dest->pitch;
 	
 	src += (objectRect->top * srcRowBytes) + (objectRect->left * BYTES_PER_PIXEL);
-	msk += (maskRect->top   * mskRowBytes) + (maskRect->left   / 8);
+	msk += (maskRect->top   * mskRowBytes) + (maskRect->left   * BYTES_PER_MASK_PIXEL);
 	dst += (destRect->top   * dstRowBytes) + (destRect->left   * BYTES_PER_PIXEL);
 	
 	if( destRect->left   < destBounds.left   ) startX -= destRect->left - destBounds.left;
@@ -150,8 +149,7 @@ void SurfaceBlitMask( SDL_Surface* object,     SDL_Surface* mask,     SDL_Surfac
 	if( destRect->top    < destBounds.top    ) startY -= destRect->top - destBounds.top;
 	if( destRect->bottom > destBounds.bottom ) endY   -= destRect->bottom - destBounds.bottom;
 	
-	startBit = 0x80000000 >> (startX & 31);
-	msk += (mskRowBytes * startY) + ((startX & ~31) / 8);
+	msk += (mskRowBytes * startY) + (startX * BYTES_PER_MASK_PIXEL);
 	src += (srcRowBytes * startY) + (startX * BYTES_PER_PIXEL);
 	dst += (dstRowBytes * startY) + (startX * BYTES_PER_PIXEL);
 
@@ -159,18 +157,16 @@ void SurfaceBlitMask( SDL_Surface* object,     SDL_Surface* mask,     SDL_Surfac
 	{
 		unsigned char *tSrc = src, *tDst = dst, *tMsk = msk;
 		
-		maskBits = SDL_SwapBE32( *(unsigned int *)msk );
-		bit = startBit;
-		
 		for( x=startX; x<endX; x++ )
 		{
-			if( maskBits & bit )
+			if( *msk )
 			{
 				*(COLOR_T*)dst = *(COLOR_T*)src;
 			}
 			
-			if( !(bit >>= 1) ) { msk += 4; maskBits = SDL_SwapBE32( *(unsigned int *)msk ); bit = 0x80000000; }
-			src += BYTES_PER_PIXEL; dst += BYTES_PER_PIXEL;
+			src += BYTES_PER_PIXEL;
+			dst += BYTES_PER_PIXEL;
+			msk += BYTES_PER_MASK_PIXEL;
 		}
 		
 		src = tSrc + srcRowBytes;
@@ -192,7 +188,6 @@ void SurfaceBlitColor( SDL_Surface* mask,     SDL_Surface* dest,
                        int r, int g, int b, int weight )
 {
 	int            startX = 0, startY = 0, endX, endY, x, y, mskRowBytes, dstRowBytes;
-	unsigned int   bit, startBit, maskBits;
 	unsigned char *msk, *dst;
 	MRect          destBounds;
 	
@@ -214,7 +209,7 @@ void SurfaceBlitColor( SDL_Surface* mask,     SDL_Surface* dest,
 	mskRowBytes = mask->pitch;
 	dstRowBytes = dest->pitch;
 	
-	msk += (maskRect->top * mskRowBytes) + (maskRect->left / 8);
+	msk += (maskRect->top * mskRowBytes) + (maskRect->left * BYTES_PER_MASK_PIXEL);
 	dst += (destRect->top * dstRowBytes) + (destRect->left * BYTES_PER_PIXEL);
 	
 	if( destRect->left   < destBounds.left   ) startX -= destRect->left - destBounds.left;
@@ -222,8 +217,7 @@ void SurfaceBlitColor( SDL_Surface* mask,     SDL_Surface* dest,
 	if( destRect->top    < destBounds.top    ) startY -= destRect->top - destBounds.top;
 	if( destRect->bottom > destBounds.bottom ) endY   -= destRect->bottom - destBounds.bottom;
 	
-	startBit = 0x80000000 >> (startX & 31);
-	msk += (mskRowBytes * startY) + ((startX & ~31) / 8);
+	msk += (mskRowBytes * startY) + (startX * BYTES_PER_MASK_PIXEL);
 	dst += (dstRowBytes * startY) + (startX * BYTES_PER_PIXEL);
 
 	r *= weight;
@@ -236,12 +230,9 @@ void SurfaceBlitColor( SDL_Surface* mask,     SDL_Surface* dest,
 		unsigned char *tMsk = msk, *tDst = dst;
 		int work, workB, workG, workR;
 		
-		maskBits = SDL_SwapBE32( *(unsigned int *)msk );
-		bit = startBit;
-				
 		for( x=startX; x<endX; x++ )
 		{
-			if( maskBits & bit )
+			if( *msk )
 			{
 				work = *(COLOR_T*)dst;
                 workB = ((((work                    ) & CHANNEL_MASK)*weight) + b) >> BITS_PER_1CHANNEL;
@@ -251,8 +242,8 @@ void SurfaceBlitColor( SDL_Surface* mask,     SDL_Surface* dest,
                 *(COLOR_T*)dst = (workR & RED_MASK) | (workG & GREEN_MASK) | (workB & BLUE_MASK);
 			}
 			
-			if( !(bit >>= 1) ) { msk += 4; maskBits = SDL_SwapBE32( *(unsigned int *)msk ); bit = 0x80000000; }
 			dst += BYTES_PER_PIXEL;
+			msk += BYTES_PER_MASK_PIXEL;
 		}
 		
 		msk = tMsk + mskRowBytes;
@@ -356,7 +347,6 @@ void SurfaceBlitWeightedDualAlpha(SDL_Surface* back,     SDL_Surface* source,   
 {
 	int startX = 0, startY = 0, endX, endY, x, y,
 	    srcRowBytes, alfRowBytes, mskRowBytes, dstRowBytes, bckRowBytes;
-	unsigned int   bit, startBit, maskBits;
 	unsigned char *bck, *src, *alf, *msk, *dst;
 	MRect destBounds;
 
@@ -389,7 +379,7 @@ void SurfaceBlitWeightedDualAlpha(SDL_Surface* back,     SDL_Surface* source,   
 	src += (sourceRect->top * srcRowBytes) + (sourceRect->left * BYTES_PER_PIXEL);
 	alf += (alphaRect->top  * alfRowBytes) + (alphaRect->left  * BYTES_PER_PIXEL);
 	dst += (destRect->top   * dstRowBytes) + (destRect->left   * BYTES_PER_PIXEL);
-	msk += (maskRect->top   * mskRowBytes) + (maskRect->left   / 8);
+	msk += (maskRect->top   * mskRowBytes) + (maskRect->left   * BYTES_PER_MASK_PIXEL);
 	
 	if( destRect->left   < destBounds.left   ) startX -= destRect->left - destBounds.left;
 	if( destRect->right  > destBounds.right  ) endX   -= destRect->right - destBounds.right;
@@ -400,20 +390,16 @@ void SurfaceBlitWeightedDualAlpha(SDL_Surface* back,     SDL_Surface* source,   
 	src += (srcRowBytes * startY) + (startX * BYTES_PER_PIXEL);
 	alf += (alfRowBytes * startY) + (startX * BYTES_PER_PIXEL);
 	dst += (dstRowBytes * startY) + (startX * BYTES_PER_PIXEL);
-	msk += (mskRowBytes * startY) + ((startX & ~31) / 8);
-	startBit = 0x80000000 >> (startX & 31);
+	msk += (mskRowBytes * startY) + (startX * BYTES_PER_MASK_PIXEL);
 	
 	for( y=startY; y<endY; y++ )
 	{
 		unsigned char *tSrc = src, *tAlf = alf, *tDst = dst, *tBck = bck, *tMsk = msk;
 		int pixS, pixB, weightS, weightB, work, workB, workG, workR;
 		
-		maskBits = SDL_SwapBE32( *(unsigned int *)msk );
-		bit = startBit;
-		
 		for( x=startX; x<endX; x++ )
 		{
-			if( maskBits & bit )
+			if( *msk )
 			{
 				work = *(COLOR_T*)alf;
 				workB = ((((work                    ) & CHANNEL_MASK)*inWeight) ) >> BITS_PER_1CHANNEL;
@@ -445,11 +431,11 @@ void SurfaceBlitWeightedDualAlpha(SDL_Surface* back,     SDL_Surface* source,   
 				}
 			}
 
-			if( !(bit >>= 1) ) { msk += 4; maskBits = SDL_SwapBE32( *(unsigned int *)msk ); bit = 0x80000000; }
 			src += BYTES_PER_PIXEL;
 			alf += BYTES_PER_PIXEL;
 			bck += BYTES_PER_PIXEL;
 			dst += BYTES_PER_PIXEL;
+			msk += BYTES_PER_MASK_PIXEL;
 		}
 		
 		bck = tBck + bckRowBytes;

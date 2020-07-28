@@ -48,7 +48,7 @@ void InitScore( void )
 	
 	numberSurface = LoadPICTAsSurface( picNumber, 32 );
 
-	numberMaskSurface = LoadPICTAsSurface( picNumberMask, 1 );
+	numberMaskSurface = LoadPICTAsSurface( picNumberMask, MASK_DEPTH );
 	
 	displayedScore[0] = displayedScore[1] = 0;
 	score[0]          = score[1]          = 0;

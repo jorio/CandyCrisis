@@ -40,10 +40,9 @@ void GetBlobGraphics()
 		boardSurface[1] = LoadPICTAsSurface( picBoard, 32 );
 	
 	// Get blob worlds
-
 	blobSurface = LoadPICTAsSurface( picBlob, 32 );
-	maskSurface = LoadPICTAsSurface( picBlobMask, 1 );
-	charMaskSurface = LoadPICTAsSurface( picCharMask, 1 );
+	maskSurface = LoadPICTAsSurface( picBlobMask, MASK_DEPTH );
+	charMaskSurface = LoadPICTAsSurface( picCharMask, MASK_DEPTH );
 
 	// Get blast worlds
 	

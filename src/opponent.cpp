@@ -37,7 +37,7 @@ void InitOpponent( void )
 	opponentSurface     = SDLU_InitSurface( SDLU_MRectToSDLRect( &bigRect, &sdlRect ), 32 );
 
 	bigRect.bottom *= kGlows + 1;
-	opponentMaskSurface = SDLU_InitSurface( SDLU_MRectToSDLRect( &bigRect, &sdlRect ), 1 );
+	opponentMaskSurface = SDLU_InitSurface( SDLU_MRectToSDLRect( &bigRect, &sdlRect ), MASK_DEPTH );
 	
 	opponentWindowZRect.top = opponentWindowZRect.left = 0;
 	opponentWindowZRect.bottom = opponentWindowZRect.right = 64;

@@ -22,7 +22,6 @@ static int          s_acquireHead = -1;
 static SDL_Surface* s_acquireList[k_acquireMax];
 
 // for initsurface
-static SDL_Palette* s_oneBitPalette;
 static SDL_Palette* s_grayscalePalette;
 
 // for button and getmouse
@@ -145,14 +144,6 @@ void SDLU_Init()
 {
     SDL_SetEventFilter(SDLUi_EventFilter, NULL);
 
-    // Initialize one bit palette.
-    static const SDL_Color  k_oneBitColors[2] = { { 0xFF, 0xFF, 0xFF, 0x00 },
-                                                  { 0x00, 0x00, 0x00, 0x00 }  };
-
-    s_oneBitPalette = SDL_AllocPalette(2);
-    
-    SDL_SetPaletteColors(s_oneBitPalette, k_oneBitColors, 0, arrsize(k_oneBitColors));
-
     // Initialize eight bit grayscale ramp palette.
     SDL_Color  grayscaleColors[256];
     for (int index=0; index<256; index++)
@@ -165,49 +156,6 @@ void SDLU_Init()
     
     s_grayscalePalette = SDL_AllocPalette(256);
     SDL_SetPaletteColors(s_grayscalePalette, grayscaleColors, 0, arrsize(grayscaleColors));
-}
-
-
-static void	SDLUi_Blit8BitTo1Bit( SDL_Surface* surface8, SDL_Rect* rect8,
-                                  SDL_Surface* surface1, SDL_Rect* rect1  )
-{
-	// NOTE: for now this copy assumes that we're copying the whole thing.
-	// That's true for everything I'm doing.
-	
-	int          x, y, across, down;
-	SDL_Color*   palette8;
-
-	(void) rect8; // is unused for now
-	
-//	ASSERTN( surface8->format->BitsPerPixel == 8, surface8->format->BitsPerPixel );
-//	ASSERTN( surface1->format->BitsPerPixel == 1, surface8->format->BitsPerPixel );
-//	ASSERT( rect8->w == rect1->w );
-//	ASSERT( rect8->h == rect1->h );
-	
-	palette8 = surface8->format->palette->colors;
-	down     = rect1->h;
-	across   = (rect1->w + 7) & ~7;
-	
-	for( y=0; y<down; y++ )
-	{
-		unsigned char* src = (unsigned char*) surface8->pixels + (y * surface8->pitch);
-		unsigned char* dst = (unsigned char*) surface1->pixels + (y * surface1->pitch);
-		
-		for( x=0; x<across; x+=8 )
-		{
-			*dst = (palette8[src[0]].r? 0: 0x80) |
-			       (palette8[src[1]].r? 0: 0x40) |
-			       (palette8[src[2]].r? 0: 0x20) |
-			       (palette8[src[3]].r? 0: 0x10) |
-			       (palette8[src[4]].r? 0: 0x08) |
-			       (palette8[src[5]].r? 0: 0x04) |
-			       (palette8[src[6]].r? 0: 0x02) |
-			       (palette8[src[7]].r? 0: 0x01)   ;
-			
-			dst += 1;
-			src += 8;
-		}
-	}
 }
 
 
@@ -240,14 +188,6 @@ MRect* SDLU_SDLRectToMRect( const SDL_Rect* in, MRect* out )
 int SDLU_BlitSurface( SDL_Surface* src, SDL_Rect* srcrect,
 			          SDL_Surface* dst, SDL_Rect* dstrect  )
 {
-	if( src->format->BitsPerPixel == 8 && dst->format->BitsPerPixel == 1 )
-	{
-		// SDL BUG!! SDL cannot blit 8-bit to 1-bit surfaces.
-		SDLUi_Blit8BitTo1Bit( src, srcrect,
-		                      dst, dstrect  );
-		return 0;
-	}
-   
 	// Let SDL handle this.
 	return SDL_BlitSurface( src, srcrect,
 	                        dst, dstrect  );
@@ -324,17 +264,6 @@ SDL_Surface* SDLU_InitSurface( SDL_Rect* rect, int depth )
 							0, 0, 0, 0 );
 
             SDL_SetSurfacePalette(surface, s_grayscalePalette);
-			break;
-		
-		case 1:
-			surface = SDL_CreateRGBSurface( 
-							SDL_SWSURFACE, 
-							rect->w, 
-							rect->h, 
-							1, 
-							0, 0, 0, 0 );
-			
-            SDL_SetSurfacePalette(surface, s_oneBitPalette);
 			break;
             
         default:

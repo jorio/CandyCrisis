@@ -21,6 +21,8 @@
 #define BITS_PER_3CHANNELS 24
 
 #define BYTES_PER_PIXEL    4
+#define BYTES_PER_MASK_PIXEL 1
+#define MASK_DEPTH 8
 
 void         SDLU_Init();
 SDL_Rect*    SDLU_MRectToSDLRect( const MRect* in, SDL_Rect* out );
