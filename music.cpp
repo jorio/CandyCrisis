@@ -11,8 +11,10 @@
 #include "soundfx.h"
 #include "graphics.h"
 
+#if 0
 #include "fmod.hpp"
 #include "fmod_errors.h"
+#endif
 
 const int               k_noMusic = -1;
 const int               k_songs = 14;
@@ -22,20 +24,25 @@ int                     musicSelection = k_noMusic;
 
 static MBoolean         s_musicFast = false;
 int                     s_musicPaused = 0;
+#if 0
 static FMOD::Channel*   s_musicChannel = NULL;
 static FMOD::Sound*     s_musicModule = NULL;
+#endif
 
 void EnableMusic( MBoolean on )
 {
+#if 0
     if (s_musicChannel)
     {
         FMOD_RESULT result = s_musicChannel->setVolume(on? 0.75f: 0.0f);
         FMOD_ERRCHECK(result);
     }
+#endif
 }
 
 void FastMusic( void )
 {
+#if 0
     if (s_musicModule && !s_musicFast)
     {
         FMOD_RESULT result = s_musicModule->setMusicSpeed(1.3f);
@@ -43,10 +50,12 @@ void FastMusic( void )
         
         s_musicFast = true;
     }
+#endif
 }
 
 void SlowMusic( void )
 {
+#if 0
     if (s_musicModule && s_musicFast)
     {
         FMOD_RESULT result = s_musicModule->setMusicSpeed(1.0f);
@@ -54,10 +63,12 @@ void SlowMusic( void )
         
         s_musicFast = false;
     }
+#endif
 }
 
 void PauseMusic( void )
 {
+#if 0
     if (s_musicChannel)
     {
         FMOD_RESULT result = s_musicChannel->setPaused(true);
@@ -65,10 +76,12 @@ void PauseMusic( void )
         
         s_musicPaused++;
     }
+#endif
 }
 
 void ResumeMusic( void )
 {
+#if 0
     if (s_musicChannel)
     {
         FMOD_RESULT result = s_musicChannel->setPaused(false);
@@ -76,10 +89,12 @@ void ResumeMusic( void )
         
         s_musicPaused--;
     }
+#endif
 }
 
 void ChooseMusic( short which )
 {
+#if 0
     if (s_musicChannel != NULL)
     {
         s_musicChannel->stop();
@@ -116,4 +131,5 @@ void ChooseMusic( short which )
         musicSelection = which;
         s_musicPaused  = 0;
     }
+#endif
 }

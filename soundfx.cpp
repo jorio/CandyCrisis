@@ -5,14 +5,19 @@
 #include "soundfx.h"
 #include "music.h"
 
+#if 0
 #include "fmod.hpp"
 #include "fmod_errors.h"
+#endif
 #include <stdio.h>
 
+#if 0
 FMOD::System              *g_fmod;
 static FMOD::Sound        *s_sound[kNumSounds];
+#endif
 MBoolean                   soundOn = true;
 
+#if 0
 void FMOD_ERRCHECK(int result)
 {
     if (result != FMOD_OK)
@@ -21,9 +26,11 @@ void FMOD_ERRCHECK(int result)
         abort();
     }
 }
+#endif
 
 void InitSound( void )
 {
+#if 0
     FMOD_RESULT   result = FMOD::System_Create(&g_fmod);
     FMOD_ERRCHECK(result);
     
@@ -46,6 +53,7 @@ void InitSound( void )
         result = g_fmod->createSound(QuickResourceName("snd", index+128, ".wav"), FMOD_LOOP_OFF | FMOD_2D | FMOD_HARDWARE, 0, &s_sound[index]);
         FMOD_ERRCHECK(result);
     }
+#endif
 }
 
 
@@ -77,6 +85,7 @@ void PlayStereoFrequency( short player, short which, short freq )
     
     if (soundOn)
     {
+#if 0
         FMOD::Channel*    channel = NULL;
         FMOD_RESULT       result = g_fmod->playSound(FMOD_CHANNEL_FREE, s_sound[which], true, &channel);
         FMOD_ERRCHECK(result);
@@ -94,11 +103,14 @@ void PlayStereoFrequency( short player, short which, short freq )
         result = channel->setPaused(false);
         FMOD_ERRCHECK(result);
         
+#endif
         UpdateSound();
     }
 }
 
 void UpdateSound()
 {
+#if 0
     g_fmod->update();
+#endif
 }
