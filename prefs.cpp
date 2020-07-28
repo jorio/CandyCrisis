@@ -20,9 +20,7 @@
 #if __APPLE__
     #define PREF_NAME(x)   @x
     typedef NSString*      PrefKeyName;
-#endif
-
-#if _WIN32
+#else
     #define PREF_NAME(x)   x
     typedef const char*    PrefKeyName;
 #endif

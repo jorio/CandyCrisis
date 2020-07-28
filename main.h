@@ -6,7 +6,7 @@
 
 void Initialize( void );
 void RetrieveResources( void );
-__declspec(noreturn) void Error( const char* extra );
+void Error( const char* extra );
 void CenterRectOnScreen( MRect *rect, double locationX, double locationY );
 MBoolean AnyKeyIsPressed( void );
 void RefreshAll( void );

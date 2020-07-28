@@ -4,6 +4,10 @@
 
 #pragma once
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_endian.h>
+#include <SDL_image.h>
+
 #if _WIN32
 
 #define _CRT_SECURE_NO_WARNINGS 1
