@@ -554,11 +554,14 @@ void ReserveMonitor( void )
 {
 	SDL_ShowCursor( SDL_DISABLE );
 	
+    SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
+
 //    SDL_CreateWindowAndRenderer(640, 480, 0, &g_window, &g_renderer);
     SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP, &g_window, &g_renderer);
 
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
     SDL_RenderSetLogicalSize(g_renderer, 640, 480);
+    SDL_SetWindowTitle(g_window, "Candy Crisis");
 
     SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, 255);
     SDL_RenderClear(g_renderer);
