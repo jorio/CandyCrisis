@@ -11,6 +11,8 @@ include_directories(${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIRS})
 include_directories(.)
 
 add_executable(Candy_Crisis
+        src/support/cmixer.cpp
+        src/support/cmixer.h
         src/blitter.cpp
         src/blitter.h
         src/CandyCrisis.cpp

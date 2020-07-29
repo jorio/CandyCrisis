@@ -5,55 +5,21 @@
 #include "soundfx.h"
 #include "music.h"
 
-#if 0
-#include "fmod.hpp"
-#include "fmod_errors.h"
-#endif
+#include "support/cmixer.h"
 #include <stdio.h>
 
-#if 0
-FMOD::System              *g_fmod;
-static FMOD::Sound        *s_sound[kNumSounds];
-#endif
+static std::vector<cmixer::WavStream> soundBank;
 MBoolean                   soundOn = true;
-
-#if 0
-void FMOD_ERRCHECK(int result)
-{
-    if (result != FMOD_OK)
-    {
-        printf("FMOD error! (%d) %s\n", result, FMOD_ErrorString(FMOD_RESULT(result)));
-        abort();
-    }
-}
-#endif
+float playerStereoSeparation = 1.0;
 
 void InitSound( void )
 {
-#if 0
-    FMOD_RESULT   result = FMOD::System_Create(&g_fmod);
-    FMOD_ERRCHECK(result);
-    
-    unsigned int  version;
-    result = g_fmod->getVersion(&version);
-    FMOD_ERRCHECK(result);
-    
-    if (version < FMOD_VERSION)
-    {
-        printf("Error!  You are using an old version of FMOD %08x.  This program requires %08x\n", version, FMOD_VERSION);
-        abort();
-    }
-    
-    result = g_fmod->init(64, FMOD_INIT_NORMAL, 0);
-    FMOD_ERRCHECK(result);
+    cmixer::InitWithSDL();
     
     for (int index=0; index<kNumSounds; index++)
     {
-        /* NOTE: don't replace the sound flags with FMOD_DEFAULT! This will make some WAVs loop (and fail to release their channels). */
-        result = g_fmod->createSound(QuickResourceName("snd", index+128, ".wav"), FMOD_LOOP_OFF | FMOD_2D | FMOD_HARDWARE, 0, &s_sound[index]);
-        FMOD_ERRCHECK(result);
+        soundBank.emplace_back(cmixer::LoadWAVFromFile(QuickResourceName("snd", index+128, ".wav")));
     }
-#endif
 }
 
 
@@ -69,48 +35,25 @@ void PlayStereo( short player, short which )
 
 void PlayStereoFrequency( short player, short which, short freq )
 {
-    struct SpeakerMix
-    {
-        float left, right, center;
-    };
-    
-    SpeakerMix speakerMixForPlayer[] =
-    {
-        { 1.0, 0.0, 0.0 },
-        { 0.0, 1.0, 0.0 },
-        { 0.0, 0.0, 1.0 },
-    };
-    
-    const SpeakerMix& mix = speakerMixForPlayer[player];
-    
     if (soundOn)
     {
-#if 0
-        FMOD::Channel*    channel = NULL;
-        FMOD_RESULT       result = g_fmod->playSound(FMOD_CHANNEL_FREE, s_sound[which], true, &channel);
-        FMOD_ERRCHECK(result);
+        auto& effect = soundBank[which];
         
-        result = channel->setSpeakerMix(mix.left, mix.right, mix.center, 0.0, 0.0, 0.0, 0.0, 0.0);
-        FMOD_ERRCHECK(result);
+        double pan;
+        switch (player) {
+            case 0: pan = -playerStereoSeparation; break;
+            case 1: pan = +playerStereoSeparation; break;
+            default: pan = 0.0; break;
+        }
         
-        float channelFrequency;
-        result = s_sound[which]->getDefaults(&channelFrequency, NULL, NULL, NULL);
-        FMOD_ERRCHECK(result);
+        effect.SetPan(pan);
+        effect.SetPitch(1.0 + freq/16.0);
+        effect.Play();
         
-        result = channel->setFrequency((channelFrequency * (16 + freq)) / 16);
-        FMOD_ERRCHECK(result);
-        
-        result = channel->setPaused(false);
-        FMOD_ERRCHECK(result);
-        
-#endif
         UpdateSound();
     }
 }
 
 void UpdateSound()
 {
-#if 0
-    g_fmod->update();
-#endif
 }
