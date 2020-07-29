@@ -47,6 +47,10 @@ struct BufferedKey
 static MBoolean                s_interestedInTyping = false;
 static std::deque<BufferedKey> s_keyBuffer;
 
+// To compute frames per second
+static int         s_fpsAccumulator = 0;
+static int         s_fpsSampleStart = 0;
+const int          k_fpsSampleInterval = 500;
 
 int SDLUi_EventFilter(void*, SDL_Event *event)
 {
@@ -431,4 +435,13 @@ void SDLU_Present()
     SDL_RenderClear(g_renderer);
     SDL_RenderCopy(g_renderer, g_windowTexture, NULL, NULL);
     SDL_RenderPresent(g_renderer);
+    s_fpsAccumulator++;
+    int now = SDL_GetTicks();
+    int elapsed = now - s_fpsSampleStart;
+    if (elapsed > k_fpsSampleInterval) {
+        float fps = s_fpsAccumulator / (elapsed / 1000.0f);
+        printf("FPS: %.1f\n", fps);
+        s_fpsAccumulator = 0;
+        s_fpsSampleStart = now;
+    }
 }
