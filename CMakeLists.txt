@@ -13,6 +13,10 @@ include_directories(.)
 add_executable(Candy_Crisis
         src/support/cmixer.cpp
         src/support/cmixer.h
+        src/support/ibxm.c
+        src/support/ibxm.h
+        src/support/ModStream.cpp
+        src/support/ModStream.h
         src/blitter.cpp
         src/blitter.h
         src/CandyCrisis.cpp
