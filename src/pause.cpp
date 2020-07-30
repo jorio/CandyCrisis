@@ -518,10 +518,9 @@ enum
 	
 // main pause screen (kEndGame is reused in continue and register)
 	kMusic = 0,		kEndGame,
-	kSound,			kPauseGame,
-	kControls,		kResume,
-	kSecret,
-	kWarp,       	kSoundTest,
+	kSound,         kControls,
+	kResume,        kSecret,
+	kWarp,
 
 // continue screen
     kContinue,      
@@ -723,8 +722,9 @@ static void DrawPauseContents( int *item, int shade )
 	MPoint dPoint;
 	int index;
 	const char *line[]  = { "\x01 Music",           "\x03 End Game",
-                            "\x01 Sound",           "\x03 Hide Game",
-                            "\x03 Controls",        "\x03 Resume"       };
+                            "\x01 Sound",           "\x03 Controls",
+                            "\x03 Resume"
+	};
 
     const int itemCount = arrsize(line);
 	
@@ -940,33 +940,7 @@ static MBoolean PauseSelected( int *item, unsigned char inKey, SDL_Keycode inSDL
 				case kMusic:     PlayMono( kClick ); musicOn = !musicOn; EnableMusic( musicOn ); return false;
 				case kEndGame:   PlayMono( kClick );                                             return true;
 				case kResume:    PlayMono( kClick );                                             return true;
-
-				case kPauseGame:
-                {
-					PlayMono( kClick );
-
-                #if __APPLE__
-                    // Activate the Finder, as if the user pressed cmd-tab. SDL will automatically realize focus
-                    // was lost and will do the right thing.
-                    NSArray *apps = [[NSWorkspace sharedWorkspace] runningApplications];
-                    
-                    for (NSRunningApplication *app in apps)
-                    {
-                        if ([app.bundleIdentifier.lowercaseString isEqualToString:@"com.apple.finder"])
-                        {
-                            [app activateWithOptions:NSApplicationActivateAllWindows | NSApplicationActivateIgnoringOtherApps];
-                            break;
-                        }
-                    }
-                #endif
-                    
-                    return false;
-                }
-                    
-				
-				case kControls:  
-					PlayMono( kClick );
-					return true;
+				case kControls:  PlayMono( kClick );                                             return true;
 				
 				case kSecret:
 					if( ControlKeyIsPressed( ) )
