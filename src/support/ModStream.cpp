@@ -10,6 +10,7 @@ ModStream::ModStream(std::vector<char> &&rawModuleData)
         , replayBuffer(2048*8)
         , rbOffset(0)
         , rbLength(0)
+        , playbackSpeedMult(1.0)
 {
     ibxm::data d;
     d.buffer = moduleFile.data();
@@ -26,6 +27,11 @@ void ModStream::Rewind2()
     printf("Rewind not supported\n");
 }
 
+void ModStream::SetPlaybackSpeed(double f)
+{
+    playbackSpeedMult = f;
+}
+
 void ModStream::FillBuffer(int16_t *output, int length)
 {
     length /= 2;
@@ -34,7 +40,7 @@ void ModStream::FillBuffer(int16_t *output, int length)
         // refill replay buffer if exhausted
         if (rbLength == 0) {
             rbOffset = 0;
-            rbLength = ibxm::replay_get_audio(replay, replayBuffer.data(), 0);
+            rbLength = ibxm::replay_get_audio(replay, replayBuffer.data(), 0, (int)(playbackSpeedMult * 100.0));
         }
 
         // number of stereo samples to copy from replay buffer to output buffer

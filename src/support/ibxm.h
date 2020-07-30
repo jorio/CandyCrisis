@@ -54,19 +54,19 @@ struct replay *new_replay(struct module *module, int sample_rate, int interpolat
 /* Deallocate the specified replay. */
 void dispose_replay(struct replay *replay);
 /* Returns the song duration in samples at the current sampling rate. */
-int replay_calculate_duration(struct replay *replay);
+int replay_calculate_duration(struct replay *replay, int speed_multiplier_percent);
 /* Seek to approximately the specified sample position.
    The actual sample position reached is returned. */
-int replay_seek(struct replay *replay, int sample_pos);
+//int replay_seek(struct replay *replay, int sample_pos);
 /* Set the pattern in the sequence to play. The tempo is reset to the default. */
 void replay_set_sequence_pos(struct replay *replay, int pos);
 /* Generates audio and returns the number of stereo samples written into mix_buf.
    Individual channels may be excluded using the mute bitmask. */
-int replay_get_audio(struct replay *replay, int *mix_buf, int mute);
+int replay_get_audio(struct replay *replay, int *mix_buf, int mute, int speed_multiplier_percent);
 /* Returns the currently playing pattern in the sequence.*/
 int replay_get_sequence_pos(struct replay *replay);
 /* Returns the currently playing row in the pattern. */
 int replay_get_row(struct replay *replay);
 /* Returns the length of the output buffer required by replay_get_audio(). */
-int calculate_mix_buf_len(int sample_rate);
+int calculate_mix_buf_len(int sample_rate, int speed_multiplier_percent);
 

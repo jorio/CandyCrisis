@@ -16,11 +16,13 @@ class ModStream : public Source {
     std::vector<int> replayBuffer;
     int rbOffset;
     int rbLength;
+    double playbackSpeedMult;
 
     void Rewind2();
     void FillBuffer(int16_t* buffer, int length);
 
 public:
     ModStream(std::vector<char>&& rawModule);
+    void SetPlaybackSpeed(double f);
 };
 }

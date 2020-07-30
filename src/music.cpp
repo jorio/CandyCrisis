@@ -38,7 +38,7 @@ void FastMusic( void )
 {
     if (s_musicChannel && !s_musicFast)
     {
-        printf("Implement Me! FastMusic (1.3x playback speed)\n");
+        s_musicChannel->SetPlaybackSpeed(1.3);
         s_musicFast = true;
     }
 }
@@ -47,7 +47,7 @@ void SlowMusic( void )
 {
     if (s_musicChannel && s_musicFast)
     {
-        printf("Implement Me! SlowMusic\n");
+        s_musicChannel->SetPlaybackSpeed(1.0);
         s_musicFast = false;
     }
 }

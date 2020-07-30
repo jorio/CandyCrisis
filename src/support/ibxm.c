@@ -1854,21 +1854,21 @@ struct replay* new_replay( struct module *module, int sample_rate, int interpola
     return replay;
 }
 
-static int calculate_tick_len( int tempo, int sample_rate ) {
-    return ( sample_rate * 5 ) / ( tempo * 2 );
+static int calculate_tick_len( int tempo, int sample_rate, int speed_percent ) {
+    return 100 * ( sample_rate * 5 ) / ( tempo * 2 ) / speed_percent;
 }
 
 /* Returns the length of the output buffer required by replay_get_audio(). */
-int calculate_mix_buf_len( int sample_rate ) {
-    return ( calculate_tick_len( 32, sample_rate ) + 65 ) * 4;
+int calculate_mix_buf_len( int sample_rate, int speed_percent ) {
+    return ( calculate_tick_len( 32, sample_rate, speed_percent ) + 65 ) * 4;
 }
 
 /* Returns the song duration in samples at the current sampling rate. */
-int replay_calculate_duration( struct replay *replay ) {
+int replay_calculate_duration( struct replay *replay, int speed_multiplier_percent ) {
     int count = 0, duration = 0;
     replay_set_sequence_pos( replay, 0 );
     while( count < 1 ) {
-        duration += calculate_tick_len( replay->tempo, replay->sample_rate );
+        duration += calculate_tick_len( replay->tempo, replay->sample_rate, speed_multiplier_percent );
         count = replay_tick( replay );
     }
     replay_set_sequence_pos( replay, 0 );
@@ -1877,6 +1877,7 @@ int replay_calculate_duration( struct replay *replay ) {
 
 /* Seek to approximately the specified sample position.
    The actual sample position reached is returned. */
+/*
 int replay_seek( struct replay *replay, int sample_pos ) {
     int idx, tick_len, current_pos = 0;
     replay_set_sequence_pos( replay, 0 );
@@ -1892,6 +1893,7 @@ int replay_seek( struct replay *replay, int sample_pos ) {
     }
     return current_pos;
 }
+ */
 
 static void replay_volume_ramp( struct replay *replay, int *mix_buf, int tick_len ) {
     int idx, a1, a2, ramp_rate = 256 * 2048 / replay->sample_rate;
@@ -1914,9 +1916,9 @@ static void downsample( int *buf, int count ) {
 
 /* Generates audio and returns the number of stereo samples written into mix_buf.
    Individual channels may be excluded using the mute bitmask. */
-int replay_get_audio( struct replay *replay, int *mix_buf, int mute ) {
+int replay_get_audio( struct replay *replay, int *mix_buf, int mute, int speed_multiplier ) {
     struct channel *channel;
-    int idx, num_channels, tick_len = calculate_tick_len( replay->tempo, replay->sample_rate );
+    int idx, num_channels, tick_len = calculate_tick_len( replay->tempo, replay->sample_rate, speed_multiplier );
     /* Clear output buffer. */
     memset( mix_buf, 0, ( tick_len + 65 ) * 4 * sizeof( int ) );
     /* Resample. */
