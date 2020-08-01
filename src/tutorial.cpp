@@ -461,7 +461,7 @@ void UpdateBalloon( void )
 	
 	if( balloonChar )
 	{
-		char in = *balloonChar++;
+		unsigned char in = *balloonChar++;
 				
 		switch( in )
 		{
