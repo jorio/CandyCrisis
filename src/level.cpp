@@ -72,6 +72,7 @@ const int kCursorWidth  = 32;
 const int kCursorHeight = 32;
 
 extern MBoolean useNewTitle;
+extern MBoolean widescreen;
 
 static void InsertCursor( MPoint mouseHere, SDL_Surface* scratch, SDL_Surface* surface )
 {
@@ -275,8 +276,9 @@ redo:
 	
 		// Get cursor position		
 		SDLU_GetMouse( &mouse );
-        if( mouse.v > 460 ) mouse.v = 460;
-        
+		if( mouse.v > (widescreen ? 400 : 460) )
+			mouse.v = (widescreen ? 400 : 460);
+		
 		// Erase falling blobs
 		for( blob=0; blob<kNumSplats; blob++ )
 		{
@@ -362,14 +364,15 @@ redo:
 		{
 			if( splatState[blob] == kFallingSplat )
 			{
-				if( splatBlob[blob].bottom >= 480 ) 
+				int bottom = widescreen? 420: 480;
+				if( splatBlob[blob].bottom >= bottom ) 
 				{
-					splatBlob[blob].top = 480 - kBlobVertSize;
-					splatBlob[blob].bottom = 480;
+					splatBlob[blob].top = bottom - kBlobVertSize;
+					splatBlob[blob].bottom = bottom;
 					splatState[blob] = 1;
 					
-                    // Process combos
-					if( mouse.v > 420 &&
+					// Process combos
+					if( mouse.v > bottom &&
 					    mouse.h >= (splatBlob[blob].left - 30) &&
 					    mouse.h <= (splatBlob[blob].right + 10)    )
 					{
@@ -701,6 +704,17 @@ void InitGame( int player1, int player2 )
 
 		CenterRectOnScreen( &stageWindowRect,    0.5, 0.65 );		
 		CenterRectOnScreen( &opponentWindowRect, 0.5, 0.5 );		
+	}
+	
+	// In widescreen mode, move score/gray windows closer to the playfield
+	// so they fit in the cropped screen.
+	if (widescreen) {
+		for (int i = 0; i < 2; i++) {
+			grayMonitorRect[i].top    = playerWindowRect[i].top - 32 - 4;
+			grayMonitorRect[i].bottom = playerWindowRect[i].top - 4;
+			scoreWindowRect[i].top    = playerWindowRect[i].bottom + 4;
+			scoreWindowRect[i].bottom = playerWindowRect[i].bottom + 16 + 4;
+		}
 	}
 	
 	nextWindowVisible[0] = ( player1 == kAutoControl )? false: true;
@@ -1196,6 +1210,17 @@ void RegisteredVictory( void )
 		{ "", "" },
 		{ "Thanks for playing Candy Crisis!", "" },
 	};
+
+	// In widescreen mode, move vertical text positions closer to the center
+	if (widescreen) {
+		for (auto& dp : dPoint) {
+			if (dp.v >= 130) {
+				dp.v -= 20;
+			} else {
+				dp.v += 20;
+			}
+		}
+	}
 	
 	textFont = GetFont( picFont );
 	titleFont = GetFont( picHiScoreFont );
@@ -1207,7 +1232,11 @@ void RegisteredVictory( void )
 	{
 		for( line=0; line<2; line++ )
 		{
-			msgSetPoint[picture][line].v = ((dPoint[picture].v == 230)? 100: 400) + (line * 30);
+			if (dPoint[picture].v >= 130) {
+				msgSetPoint[picture][line].v = (widescreen? 120: 100) + line * 30;
+			} else {
+				msgSetPoint[picture][line].v = (widescreen? 380: 300) + line * 30;
+			}
 			msgSetPoint[picture][line].h = 320 - (GetTextWidth( titleFont, messages[picture][line] ) / 2);
 		}
 		

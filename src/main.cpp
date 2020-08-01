@@ -310,7 +310,11 @@ MBoolean     needsRefresh = false;
 
 static char  candyCrisisResources[512];
 
+MBoolean fullscreen = false;
+MBoolean widescreen = false;
 MBoolean useNewTitle = true;
+MBoolean bilinearFiltering = false;
+int windowedScale = 2;
 
 #if _WIN32
 int WinMain(
@@ -557,12 +561,18 @@ void ReserveMonitor( void )
 	SDL_ShowCursor( SDL_DISABLE );
 	
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, bilinearFiltering? "best": "0");
+    
+    int resW = 640;
+    int resH = widescreen? 360: 480;
+    
+    if (fullscreen) {
+        SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP, &g_window, &g_renderer);
+    } else {
+        SDL_CreateWindowAndRenderer(resW*windowedScale, resH*windowedScale, 0, &g_window, &g_renderer);
+    }
 
-//    SDL_CreateWindowAndRenderer(640, 480, 0, &g_window, &g_renderer);
-    SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP, &g_window, &g_renderer);
-
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
-    SDL_RenderSetLogicalSize(g_renderer, 640, 480);
+    SDL_RenderSetLogicalSize(g_renderer, resW, resH);
     SDL_SetWindowTitle(g_window, "Candy Crisis");
 
     SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, 255);

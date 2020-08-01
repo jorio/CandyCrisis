@@ -28,6 +28,8 @@
 
 using std::min;
 
+extern MBoolean widescreen;
+
 Combo defaultBest = 
 {
 	/*bestGrid[kGridAcross][kGridDown] = */ 
@@ -220,7 +222,6 @@ void ShowHiscore( void )
 	hiScoreSurface = LoadPICTAsSurface( picBackdrop + (100 * RandomBefore(kLevels)), 32 );
 	fadeSurface    = SDLU_InitSurface( &fullSDLRect, 32 );
 
-	font = GetFont( picHiScoreFont );
 
 	SDLU_AcquireSurface( hiScoreSurface );
 		
@@ -230,20 +231,25 @@ void ShowHiscore( void )
 	anyColor.g = min( 255, anyColor.g + 112 );
 	anyColor.b = min( 255, anyColor.b + 112 );
 
-	dPoint.v = 20;
+	dPoint.v = widescreen? 100: 20;
 	dPoint.h = 225;
+	font = GetFont( picHiScoreFont );
 	for( count=0; highScores[count]; count++ )
 	{
 		SurfaceBlitCharacter( font, highScores[count], &dPoint, 255, 255, 255, 1 );
 	}
 	
+    font = GetFont(widescreen ? picFont : picHiScoreFont);
 	for( count=0; count<=9; count++ )
 	{
 		r = ((255 * (10-count)) + (anyColor.r * count)) / 10;
 		g = ((255 * (10-count)) + (anyColor.g * count)) / 10;
 		b = ((255 * (10-count)) + (anyColor.b * count)) / 10;
 		
-		dPoint.v = 75 + count * 38;
+		if (widescreen)
+			dPoint.v = 150 + count * 24;
+		else
+			dPoint.v = 75 + count * 38;
 		dPoint.h = 85;
 		
 		if( count<9 )
@@ -327,8 +333,6 @@ void ShowBestCombo( void )
 	MPoint dPoint;
 	int levelCap;
 	
-	font = GetFont( picHiScoreFont );
-	
 	StopBalloon( );
 	InitGame( kAutoControl, kNobodyControl );
 	scoreWindowVisible[0] = false;
@@ -348,7 +352,8 @@ void ShowBestCombo( void )
 	
 	SDLU_AcquireSurface( backdropSurface );
 	
-	dPoint.v = 40;
+	font = GetFont(picHiScoreFont);
+	dPoint.v = widescreen? 70: 40;
 	dPoint.h = 225;
 	for( scan = bestCombo; *scan; scan++ )
 	{
@@ -356,7 +361,9 @@ void ShowBestCombo( void )
 	}
 		
 	sprintf( bestInfo, "%s (%d points)", best.name, best.value );
-	dPoint.v = 410;
+
+    font = GetFont(widescreen ? picFont : picHiScoreFont);
+	dPoint.v = widescreen? 388: 410;
 	dPoint.h = 320 - (GetTextWidth( font, bestInfo ) / 2);
 
 	for( scan = bestInfo; *scan; scan++ )

@@ -311,7 +311,7 @@ AutoPattern tutorialPattern[] =
 	{ kComplete,       0,   0,   NULL }
 };
 
-MRect           balloonRect = {0, 0, 190, 210};
+MRect           balloonRect = {0, 0, 208, 236};
 SkittlesFontPtr balloonFont;
 MPoint          balloonPt;
 char*           balloonChar;
@@ -432,7 +432,7 @@ void StartBalloon( const char *message )
 	SurfaceCurveEdges( balloonSurface, &balloonContentsRect );
 	
 	balloonTip.v = balloonContentsRect.bottom - 2;
-	balloonTip.h = balloonContentsRect.right - 40;
+	balloonTip.h = balloonContentsRect.right - 60;
 	balloonFill = balloonTip;
 
 	SurfaceBlitCharacter( balloonFont, '\x01', &balloonFill,  0,   0,   0,  0 );
