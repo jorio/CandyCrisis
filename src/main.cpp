@@ -310,6 +310,8 @@ MBoolean     needsRefresh = false;
 
 static char  candyCrisisResources[512];
 
+MBoolean useNewTitle = true;
+
 #if _WIN32
 int WinMain(
 	_In_ HINSTANCE,

@@ -52,18 +52,26 @@ static MBoolean shouldFullRepaint = false;
 static int startMenuTime = 0;
 static int splatState[kNumSplats], splatColor[kNumSplats], splatSide[kNumSplats];
 static MRect splatBlob[kNumSplats];
-static MRect titleRect[kTitleItems] = {
-		{ 155, 203, 207, 426 }, // tutorial
-		{ 225, 179, 281, 451 }, // 1p
-		{ 297, 182, 352, 454 }, // 2p
-		{ 358, 183, 428, 458 }, // solitaire
-		{ 429, 280, 478, 390 }, // high scores
-		{ 433, 390, 477, 446 }, // quit
-		{ 430, 187, 479, 280 }, // controls
-		                };
+
+struct {
+	const char* name;
+	MRGBColor color1;
+	MRGBColor color2;
+	MRect rect;
+} titleItems[kTitleItems] = {
+		{ "\x03 Tutorial Mode",     {204, 67,137}, {101, 74,207}, {155, 203, 207, 426} },
+		{ "\x03 One Player Game",   { 35, 31,240}, { 81,237,252}, {225, 179, 281, 451} },
+		{ "\x03 Two Player Game",   {212,194, 48}, {255,196, 56}, {297, 182, 352, 454} },
+		{ "\x03 Solitaire Crisis",  {102,247,106}, {125,237,179}, {358, 183, 428, 458} },
+		{ "\x03 High Scores",       {234,244,132}, {192,218, 85}, {429, 280, 478, 390} },
+		{ "\x03 Controls",          { 64, 88,212}, { 62, 87,205}, {430, 187, 479, 280} },
+		{ "\x03 Quit",              {107,105,106}, {169,167,168}, {433, 390, 477, 446} }
+};
 
 const int kCursorWidth  = 32;
 const int kCursorHeight = 32;
+
+extern MBoolean useNewTitle;
 
 static void InsertCursor( MPoint mouseHere, SDL_Surface* scratch, SDL_Surface* surface )
 {
@@ -160,15 +168,53 @@ redo:
 	
 	// make drawing surface
 	gameStartDrawSurface = SDLU_InitSurface( &backdropSDLRect, 32 );
-	SDLU_BlitSurface( gameStartSurface,     &gameStartSurface->clip_rect,
-					  gameStartDrawSurface, &gameStartDrawSurface->clip_rect );
+	if (!useNewTitle) {
+		SDLU_BlitSurface(gameStartSurface, &gameStartSurface->clip_rect,
+						 gameStartDrawSurface, &gameStartDrawSurface->clip_rect);
+	} else {
+		// Prepare new title screen
+		SDL_FillRect(gameStartDrawSurface, &gameStartDrawSurface->clip_rect, black);
+
+		// Copy logo from original title screen to where we want it
+		SDL_Rect r1 = {0, 0, 640, 150};
+		SDL_Rect r2 = {0, 70, 640, 150};
+		SDLU_BlitSurface(gameStartSurface, &r1, gameStartDrawSurface, &r2);
+
+		// Now we're going to draw title items on gameStartSurface
+		SDL_FillRect(gameStartSurface, &gameStartSurface->clip_rect, black);
+		SDLU_AcquireSurface(gameStartSurface);
+
+		SkittlesFontPtr font = GetFont(picFont);
+		int left = 225;
+		dPoint.h = left;
+		dPoint.v = 215;
+		for (int i = 0; i < kTitleItems; i++) {
+			auto &item = titleItems[i];
+			item.rect.left = dPoint.h;
+			item.rect.top = dPoint.v - 6;
+			item.rect.bottom = dPoint.v + 16 + 6;
+			auto nameLength = strlen(item.name);
+			for (int charNo = 0; charNo < nameLength; charNo++) {
+				char c = item.name[charNo];
+				float p = charNo / (float) (nameLength - 1);
+				int red = item.color1.red * (1.0f - p) + item.color2.red * p;
+				int green = item.color1.green * (1.0f - p) + item.color2.green * p;
+				int blue = item.color1.blue * (1.0f - p) + item.color2.blue * p;
+				SurfaceBlitCharacter(font, c, &dPoint, red, green, blue, 1);
+			}
+			item.rect.right = dPoint.h;
+			dPoint.h = left;
+			dPoint.v += 28;
+		}
+		SDLU_ReleaseSurface(gameStartSurface);
+	}
 	
 	// darken menu items
 	for( count=0; count<kTitleItems; count++ )
 	{
 		SurfaceBlitColorOver( gameStartSurface,  gameStartDrawSurface,
-		                      &titleRect[count], &titleRect[count], 
-		                       0, 0, 0, titleGlow[count] );
+							  &titleItems[count].rect, &titleItems[count].rect, 
+							   0, 0, 0, titleGlow[count] );
 	}
 	
 	SDLU_BlitFrontSurface( gameStartDrawSurface, &backdropSDLRect, &backdropSDLRect );
@@ -377,7 +423,7 @@ redo:
 		selected = -1;			
 		for( count=0; count<kTitleItems; count++ )
 		{
-			if( MPointInMRect( mouse, &titleRect[count] ) )
+			if( MPointInMRect( mouse, &titleItems[count].rect ) )
 			{
 				selected = count;
 				break;
@@ -385,8 +431,9 @@ redo:
 		}
 
 		// update glows
-        for (int glowUpdate=0; glowUpdate < 7; ++glowUpdate)
+		for (int glowUpdate=0; glowUpdate < kTitleItems; ++glowUpdate)
 		{
+			const MRect& titleRect = titleItems[glowUpdate].rect;
 			oldGlow = titleGlow[glowUpdate];
 			
 			if( selected == glowUpdate )
@@ -403,13 +450,13 @@ redo:
 			if( titleGlow[glowUpdate] != oldGlow )
 			{
 				SurfaceBlitColorOver( gameStartSurface,       gameStartDrawSurface,
-				                      &titleRect[glowUpdate], &titleRect[glowUpdate],
-				                       0, 0, 0, titleGlow[glowUpdate] );
+									  &titleRect, &titleRect,
+									   0, 0, 0, titleGlow[glowUpdate] );
 
-                drawRect[kGlow].top    = min<short>(drawRect[kGlow].top,    titleRect[glowUpdate].top);
-                drawRect[kGlow].left   = min<short>(drawRect[kGlow].left,   titleRect[glowUpdate].left);
-                drawRect[kGlow].bottom = max<short>(drawRect[kGlow].bottom, titleRect[glowUpdate].bottom);
-                drawRect[kGlow].right  = max<short>(drawRect[kGlow].right,  titleRect[glowUpdate].right);
+				drawRect[kGlow].top    = min<short>(drawRect[kGlow].top, titleRect.top);
+				drawRect[kGlow].left   = min<short>(drawRect[kGlow].left, titleRect.left);
+				drawRect[kGlow].bottom = max<short>(drawRect[kGlow].bottom, titleRect.bottom);
+				drawRect[kGlow].right  = max<short>(drawRect[kGlow].right, titleRect.right);
 			}
 		}
 
@@ -460,7 +507,7 @@ redo:
 
 	if( finished ) 
 	{
-		selected = 5; // quit
+		selected = 6; // quit
 	}
 	
 	switch( selected )
@@ -481,6 +528,7 @@ redo:
 
 	switch( selected )
 	{
+		// Tutorial
 		case 0: 
 			InitGame( kAutoControl, kNobodyControl );
 			level = kTutorialLevel;
@@ -489,6 +537,7 @@ redo:
 			QuickFadeIn( NULL );
 			break;				
 
+		// 1P, 2P, Solitaire
 		case 1:
 		case 2:
 		case 3:
@@ -501,28 +550,31 @@ redo:
             break;
         }
 		
+		// High scores
 		case 4: 
 			ShowHiscore();
 			ShowBestCombo();
 			break;
 			
+		// Controls
 		case 5:
-			finished = true;
-			break;
-		
-		case 6:
-        {
+		{
 			int currentID = RandomBefore(kLevels) * 100;
 	
 			DrawPICTInSurface( boardSurface[0], picBoard + currentID );	
 			DrawPICTInSurface( g_frontSurface, picBackdrop + currentID );
-            SDLU_Present();
+			SDLU_Present();
 	
 			QuickFadeIn( NULL );
 			HandleDialog( kControlsDialog );
 			QuickFadeOut( NULL );
 			goto redo;
-        }
+		}
+		
+		// Quit
+		case 6:
+			finished = true;
+			break;
 	}
 }
 
