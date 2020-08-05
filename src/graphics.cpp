@@ -167,9 +167,9 @@ void ShowTitle( void )
 
     int time = MTickCount() + 120;
 
+    DrawPICTInSurface( g_frontSurface, picTitle );
 	while( time > MTickCount() && !SDLU_Button() )
 	{
-        DrawPICTInSurface( g_frontSurface, picTitle );
         SDLU_Present();
 		SDLU_Yield();
 	}
