@@ -32,6 +32,7 @@ static MPoint       s_mousePosition;
 static MBoolean     s_isForeground = true;
 
 extern MBoolean  widescreen;
+extern MBoolean  fullscreen;
  
 // for checktyping
 struct BufferedKey
@@ -300,7 +301,10 @@ void SDLU_BlitFrontSurface( SDL_Surface* source, SDL_Rect* sourceSDLRect, SDL_Re
 
 void SDLU_SetBrightness( float b )
 {
-/*	Uint16 table[256];
+    if (!fullscreen)
+        return;
+
+	Uint16 table[256];
 	int    index;
 	
 	for( index=0; index<256; index++ )
@@ -309,7 +313,7 @@ void SDLU_SetBrightness( float b )
 	}
 	
 	SDL_SetWindowGammaRamp(g_window, table, table, table);
-*/}
+}
 
 void SDLU_Yield()
 {

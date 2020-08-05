@@ -655,43 +655,43 @@ void Initialize(void)
 
 void QuickFadeIn( MRGBColor *color )
 {
-/*	(void) color; // is unused
+	(void) color; // is unused
 
-	int   c;
-	float percent;
+	if (fullscreen) {
+        for( float percent=0.0f; percent<1.0f; percent += 0.04f )
+        {
+            int c = MTickCount( );
+            SDLU_SetBrightness( percent );
+            while( c == MTickCount( ) )
+            {
+                SDLU_Yield();
+            }
+        }
 
-	for( percent=0.0f; percent<1.0f; percent += 0.04f )
-	{
-		c = MTickCount( ); 
-		SDLU_SetBrightness( percent );
-		while( c == MTickCount( ) ) 
-		{  
-			SDLU_Yield(); 
-		}
+        SDLU_SetBrightness( 1.0 );
 	}
-	
-	SDLU_SetBrightness( percent );*/
+
     SDL_Delay(200);
 }
 
 void QuickFadeOut( MRGBColor *color )
-{/*
+{
 	(void) color; // is unused
 
-	int    c;
-	float  percent;
+	if (fullscreen) {
+        for( float percent=1.0f; percent>0.0f; percent -= 0.04f )
+        {
+            int c = MTickCount( );
+            SDLU_SetBrightness( percent );
+            while( c == MTickCount( ) )
+            {
+                SDLU_Yield();
+            }
+        }
 
-	for( percent=1.0f; percent>0.0f; percent -= 0.04f )
-	{
-		c = MTickCount( ); 
-		SDLU_SetBrightness( percent );
- 		while( c == MTickCount( ) )
- 		{
- 			SDLU_Yield(); 
- 		}
+        SDLU_SetBrightness( 0.0 );
 	}
-	
-	SDLU_SetBrightness( percent );*/
+
     SDL_Delay(200);
 }
 
