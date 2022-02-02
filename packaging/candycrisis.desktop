@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Candy Crisis
+Comment=Candy Crisis
+Icon=candycrisis-desktopicon
+Exec=CandyCrisis
+Terminal=false
+Categories=Game;

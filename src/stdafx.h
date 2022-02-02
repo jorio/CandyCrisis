@@ -4,14 +4,12 @@
 
 #pragma once
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_endian.h>
+#include <SDL.h>
+#include <SDL_endian.h>
 
 #if _WIN32
 
 #define _CRT_SECURE_NO_WARNINGS 1
-
-#include "targetver.h"
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
@@ -22,8 +20,5 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
-
-#include "SDL.h"
-#include "SDL_endian.h"
 
 #endif

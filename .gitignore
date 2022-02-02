@@ -1,2 +1,5 @@
-cmake-build-*
-
+build-*/
+cache/
+cmake-build-*/
+dist/
+extern/
