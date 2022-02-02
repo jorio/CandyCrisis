@@ -278,6 +278,12 @@
 #include "pause.h"
 #include "tutorial.h"
 
+#if __APPLE__
+#include <sys/types.h>
+#include <unistd.h>
+#include <errno.h>
+#include <libproc.h>
+#endif
 
 SDL_Renderer* g_renderer;
 SDL_Window*   g_window;
@@ -603,11 +609,11 @@ const char* QuickResourceName( const char* prefix, int id, const char* extension
 	static char name[1024];
 	if (id)
 	{
-		sprintf( name, "%s%s_%d%s", candyCrisisResources, prefix, id, extension );
+		snprintf( name, sizeof(name), "%s%s_%d%s", candyCrisisResources, prefix, id, extension );
 	}
 	else
 	{
-		sprintf( name, "%s%s%s", candyCrisisResources, prefix, extension );
+		snprintf( name, sizeof(name), "%s%s%s", candyCrisisResources, prefix, extension );
 	}
 	
 	return name;
@@ -616,13 +622,31 @@ const char* QuickResourceName( const char* prefix, int id, const char* extension
 void Initialize(void)
 {
 #if _WIN32
-    strcpy(candyCrisisResources, "CandyCrisisResources\\");
-#endif
-#if __APPLE__
-    sprintf(candyCrisisResources, "%s/", [[[NSBundle mainBundle] resourcePath] UTF8String]);
-#endif
-#ifdef linux
-	strcpy(candyCrisisResources, "CandyCrisisResources/");
+	snprintf(candyCrisisResources, sizeof(candyCrisisResources), "CandyCrisisResources\\");
+#elif __APPLE__
+	char pathbuf[PROC_PIDPATHINFO_MAXSIZE];
+
+	pid_t pid = getpid();
+	int ret = proc_pidpath(pid, pathbuf, sizeof(pathbuf));
+	if (ret <= 0)
+	{
+		Error(strerror(errno));
+	}
+
+	// go up two levels
+	for (int i = 0; i < 2; i++)
+	{
+		char* slashPos = strrchr(pathbuf, '/');
+		if (!slashPos)
+		{
+			Error("can't find Resources folder");
+		}
+		*slashPos = '\0';
+	}
+
+	snprintf(candyCrisisResources, sizeof(candyCrisisResources), "%s/Resources/", pathbuf);
+#else
+	snprintf(candyCrisisResources, sizeof(candyCrisisResources), "CandyCrisisResources/");
 #endif
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
