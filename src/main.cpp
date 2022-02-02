@@ -579,8 +579,10 @@ void ReserveMonitor( void )
     if (fullscreen) {
         SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP, &g_window, &g_renderer);
     } else {
-        SDL_CreateWindowAndRenderer(resW*windowedScale, resH*windowedScale, 0, &g_window, &g_renderer);
+        SDL_CreateWindowAndRenderer(resW*windowedScale, resH*windowedScale, SDL_WINDOW_RESIZABLE, &g_window, &g_renderer);
     }
+
+    SDL_RenderSetIntegerScale(g_renderer, bilinearFiltering ? SDL_FALSE : SDL_TRUE);
 
     SDL_RenderSetLogicalSize(g_renderer, resW, resH);
     SDL_SetWindowTitle(g_window, "Candy Crisis");
