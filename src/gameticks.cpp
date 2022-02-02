@@ -3,10 +3,10 @@
 #include <SDL_timer.h>
 #include "gameticks.h"
 
-unsigned int  baseTickCount, freezeTickCount;
+MTicks baseTickCount, freezeTickCount;
 int freezeLevel;
 
-unsigned int  MTickCount()
+MTicks MTickCount()
 {
 	return (unsigned int ) ((float)SDL_GetTicks() * 0.06f);
 }

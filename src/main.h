@@ -252,7 +252,7 @@ extern signed char nextA[2], nextB[2], nextM[2], nextG[2], colorA[2], colorB[2],
 	blobX[2], blobY[2], blobR[2], blobSpin[2], speed[2], role[2], halfway[2],
 	control[2], dropping[2], magic[2], grenade[2], anim[2];
 extern int chain[2];
-extern int blobTime[2], startTime, endTime;
+extern MTicks blobTime[2], startTime, endTime;
 extern MBoolean finished, pauseKey, showStartMenu;
 extern MBoolean fullscreen, widescreen, crispUpscaling;
 extern signed char grid[2][kGridAcross][kGridDown], suction[2][kGridAcross][kGridDown],

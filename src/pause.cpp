@@ -48,7 +48,8 @@ SkittlesFontPtr smallFont, bigFont, dashedLineFont, continueFont, tinyFont, bats
 FRGBColor backColor[4];
 MBoolean continueTimeOut;
 
-static int dialogType, dialogStage, dialogTimer, dialogTarget, dialogShade, dialogItem;
+static int dialogType, dialogStage, dialogTarget, dialogShade, dialogItem;
+MTicks dialogTimer;
 static float colorWrap = 0, colorInc;
 static MRect logoRect = {0, 0, 111, 246}, lastPauseRect;
 static MBoolean dialogStageComplete;

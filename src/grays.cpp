@@ -20,7 +20,8 @@
 
 int grays[2][kGridAcross], grayAir[2][kGridAcross];
 int unallocatedGrays[2], lockGrays[2], rowBounce[2][kGridAcross], splat[2][kGridAcross];
-int blinkTime[2], blinkStage[2];
+MTicks blinkTime[2];
+int blinkStage[2];
 const int blinkList[] = { kGrayNoBlink, kGrayBlink1,  kGrayBlink2, 
   						  kGrayBlink3,  kGrayBlink2,  kGrayBlink1   };
 

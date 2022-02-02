@@ -14,7 +14,7 @@
 
 int destinationX[2], destinationR[2];
 signed char tempGrid[kGridAcross][kGridDown];
-int timeAI[2], timeMove[2];
+MTicks timeAI[2], timeMove[2];
 MBoolean moveQuick[2];
 AutoPatternPtr autoPattern = NULL;
 

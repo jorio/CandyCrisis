@@ -114,7 +114,6 @@ if(NOT MSVC)
 		-Wall
 		#-Wextra  # TODO
 		#-Wshadow  # TODO
-		-Wno-sign-compare  # TODO
 		-Wno-multichar
 		-Wno-unknown-pragmas
 		-Werror=return-type

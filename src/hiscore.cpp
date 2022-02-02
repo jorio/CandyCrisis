@@ -117,7 +117,8 @@ const char *highScoreRank;
 
 static void FadeScreen( SDL_Surface* hiScoreSurface, SDL_Surface* fadeSurface, int start, int end )
 {
-	int       skip, timer, frame, fade, color, direction, fadeStart, fadeEnd;
+	MTicks    timer;
+	int       skip, frame, fade, color, direction, fadeStart, fadeEnd;
 	SDL_Rect  destSDLRect;
 	SDL_Rect  fullSDLRect = { 0, 0, 640, 480 };
 	int       black;

@@ -20,7 +20,8 @@ enum
 #define kGlowArraySize 30
 
 extern int opponentMood, opponentFrame;
-extern int opponentTime, glowTime[kGlows], glowFrame[kGlows], panicTime, panicFrame;
+extern MTicks opponentTime, glowTime[kGlows], panicTime;
+extern int glowFrame[kGlows], panicFrame;
 extern int glowArray[kGlowArraySize], lightGlowArray[kGlowArraySize];
 
 extern MRect opponentWindowZRect, opponentWindowRect;

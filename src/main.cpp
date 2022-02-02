@@ -288,7 +288,7 @@ signed char  nextA[2], nextB[2], nextM[2], nextG[2], colorA[2], colorB[2],
 	         blobX[2], blobY[2], blobR[2], blobSpin[2], speed[2], role[2], halfway[2],
 	         control[2], dropping[2], magic[2], grenade[2], anim[2];
 int          chain[2];
-int          blobTime[2], startTime, endTime;
+MTicks       blobTime[2], startTime, endTime;
 MBoolean     finished = false, pauseKey = false, showStartMenu = true;
 signed char  grid[2][kGridAcross][kGridDown], suction[2][kGridAcross][kGridDown], charred[2][kGridAcross][kGridDown], glow[2][kGridAcross][kGridDown];
 MRect        playerWindowZRect, playerWindowRect[2];
@@ -642,7 +642,7 @@ void QuickFadeIn( MRGBColor *color )
 	if (fullscreen) {
         for( float percent=0.0f; percent<1.0f; percent += 0.04f )
         {
-            int c = MTickCount( );
+            MTicks c = MTickCount( );
             SDLU_SetBrightness( percent );
             while( c == MTickCount( ) )
             {
@@ -663,7 +663,7 @@ void QuickFadeOut( MRGBColor *color )
 	if (fullscreen) {
         for( float percent=1.0f; percent>0.0f; percent -= 0.04f )
         {
-            int c = MTickCount( );
+            MTicks c = MTickCount( );
             SDLU_SetBrightness( percent );
             while( c == MTickCount( ) )
             {

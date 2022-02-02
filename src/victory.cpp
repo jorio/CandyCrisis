@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <string.h>
 
-unsigned int  winTime, loseTime;
+MTicks winTime, loseTime;
 int winStage, loseStage;
 float drop[kGridAcross], last[kGridAcross];
 SkittlesFontPtr victoryFont;
@@ -88,7 +88,7 @@ void BeginVictory( int player )
 
 void Lose( int player )
 {
-	int       gameTime = GameTickCount();
+	MTicks    gameTime = GameTickCount();
 	int       skip = 1;
 	MRect     boardRect;
 	

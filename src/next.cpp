@@ -20,7 +20,8 @@ SDL_Surface* nextDrawSurface;
 
 MRect nextWindowZRect, nextWindowRect[2];
 MBoolean nextWindowVisible[2] = {true, true};
-int nextTime[2][2], nextStage[2][2], pullA[2], pullB[2];
+MTicks nextTime[2][2];
+int nextStage[2][2], pullA[2], pullB[2];
 
 void InitNext( void )
 {

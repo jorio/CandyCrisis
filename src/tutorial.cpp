@@ -315,7 +315,7 @@ SkittlesFontPtr balloonFont;
 MPoint          balloonPt;
 char*           balloonChar;
 char            balloonMsg[256];
-int             balloonTime, tutorialTime;
+MTicks          balloonTime, tutorialTime;
 SDL_Surface*    balloonSurface = NULL;
 
 void InitTutorial( void )

@@ -47,7 +47,7 @@ using std::max;
 
 const int startSkip = 1;
 static MBoolean shouldFullRepaint = false;
-static int startMenuTime = 0;
+static MTicks startMenuTime = 0;
 static int splatState[kNumSplats], splatColor[kNumSplats], splatSide[kNumSplats];
 static MRect splatBlob[kNumSplats];
 
@@ -1084,7 +1084,8 @@ void SharewareVictory( void )
 	MRect           bufferSrcRect = { 0, 50, 480, 350 };
 	MRect           bufferDstRect = { 0, 0, 480, 300 };
 	MPoint          dPoint = { 450, 50 }, lPoint, cPoint;
-	int             scroll, ticks, x, y;
+	int             scroll, x, y;
+	MTicks          ticks;
 	const char*     text;
 	int             thisFade;
 	const char fade[120] =   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //0
@@ -1215,7 +1216,7 @@ void RegisteredVictory( void )
 	MPoint          bubblePoint, textPoint, shadowPoint;
 	MPoint          setPoint[7][6];
 	MPoint          msgSetPoint[7][2];
-	int             ticks;
+	MTicks          ticks;
 	int             vertScroll, picture, weight, line, minimum;
 	int             scrollDir[] = {1, -1, 1, -1, 1, -1, -1};
 	int             spacing[] = {40, 19, 19, 19, 23, 19, 23 };

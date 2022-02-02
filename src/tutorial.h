@@ -24,7 +24,7 @@ typedef struct
 AutoPattern, *AutoPatternPtr;
 
 extern AutoPatternPtr autoPattern;
-extern int tutorialTime;
+extern MTicks tutorialTime;
 
 void InitTutorial( void );
 void StartBalloon( const char *message );

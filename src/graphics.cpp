@@ -163,7 +163,7 @@ void ShowTitle( void )
 
     RetrieveResources( );
 
-    int time = MTickCount() + 120;
+    MTicks time = MTickCount() + 120;
 
     DrawPICTInSurface( g_frontSurface, picTitle );
 	while( time > MTickCount() && !SDLU_Button() )

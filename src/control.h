@@ -17,7 +17,7 @@ void AutoControl( int player );
 
 extern int destinationX[2], destinationR[2];
 extern signed char tempGrid[kGridAcross][kGridDown];
-extern int timeAI[2];
+extern MTicks timeAI[2];
 extern MBoolean moveQuick[2];
 enum
 {

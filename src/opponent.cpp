@@ -23,7 +23,8 @@ SDL_Surface* opponentDrawSurface;
 
 MRect opponentWindowZRect, opponentWindowRect;
 int opponentMood, opponentFrame;
-int opponentTime, glowTime[kGlows], glowFrame[kGlows], panicTime, panicFrame;
+MTicks opponentTime, glowTime[kGlows], panicTime;
+int glowFrame[kGlows], panicFrame;
 int heavyGlowArray[kGlowArraySize], glowArray[kGlowArraySize], lightGlowArray[kGlowArraySize];
 
 void InitOpponent( void )

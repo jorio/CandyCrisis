@@ -1,6 +1,8 @@
 // gameticks.h
 
-unsigned int  MTickCount();
+#include "MTypes.h"
+
+MTicks MTickCount();
 void InitGameTickCount( void );
 void FreezeGameTickCount( void );
 void UnfreezeGameTickCount( void );

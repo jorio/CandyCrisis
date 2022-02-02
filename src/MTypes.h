@@ -6,12 +6,13 @@
 ///  John Stiles, 2002/10/14
 ///
 
+#pragma once
 
-#ifndef __MTYPES__
-#define __MTYPES__
-
+#include <cstdint>
 
 typedef signed char MBoolean;
+
+typedef uint32_t MTicks;
 
 
 struct MRGBColor
@@ -42,5 +43,3 @@ void UnionMRect( const MRect* a, const MRect* b, MRect* u );
 void OffsetMRect( MRect* r, int x, int y );
 unsigned char MPointInMRect( MPoint p, MRect* r );
 
-
-#endif
