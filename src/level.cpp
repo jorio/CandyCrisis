@@ -588,6 +588,10 @@ void ShowGameOverScreen( void )
 	QuickFadeOut(NULL);
 
 	DrawPICTInSurface( g_frontSurface, picGameOver );
+
+    SDL_Rect widescreenCropBackup = g_widescreenCrop;
+    g_widescreenCrop.y = 30;
+
     SDLU_Present();
 
 	QuickFadeIn( NULL );
@@ -598,6 +602,8 @@ void ShowGameOverScreen( void )
 	}
 	while( !AnyKeyIsPressed( ) && !SDLU_Button() );
 	QuickFadeOut( NULL );
+
+    g_widescreenCrop = widescreenCropBackup;
 }
 
 void InitStage( void )

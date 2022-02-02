@@ -440,9 +440,7 @@ void SDLU_Present()
     SDL_UpdateTexture(g_windowTexture, NULL, g_frontSurface->pixels, g_frontSurface->pitch);
     SDL_RenderClear(g_renderer);
     
-    SDL_Rect crop {0,60,640,360};
-    
-    SDL_RenderCopy(g_renderer, g_windowTexture, widescreen ? &crop : NULL, NULL);
+    SDL_RenderCopy(g_renderer, g_windowTexture, widescreen ? &g_widescreenCrop : NULL, NULL);
     SDL_RenderPresent(g_renderer);
     
     s_fpsAccumulator++;

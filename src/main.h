@@ -244,6 +244,7 @@ extern SDL_Renderer* g_renderer;
 extern SDL_Window*   g_window;
 extern SDL_Texture*  g_windowTexture;
 extern SDL_Surface*  g_frontSurface;
+extern SDL_Rect      g_widescreenCrop;
 
 extern signed char nextA[2], nextB[2], nextM[2], nextG[2], colorA[2], colorB[2],
 	blobX[2], blobY[2], blobR[2], blobSpin[2], speed[2], role[2], halfway[2],
