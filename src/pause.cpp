@@ -39,8 +39,6 @@
 using std::min;
 using std::max;
 
-const char kEscapeKey = 0x1B;
-
 struct FRGBColor
 {
 	float red, green, blue;
@@ -760,7 +758,7 @@ static MBoolean ContinueSelected( int *item, unsigned char inKey, SDL_Keycode in
 		return true;
 	}
 	
-	if( inKey == kEscapeKey )
+	if( inSDLKey == SDLK_ESCAPE )
 	{
 		*item = kContinue;
 		return true;
@@ -911,7 +909,7 @@ static MBoolean PauseSelected( int *item, unsigned char inKey, SDL_Keycode inSDL
 	SDLU_GetMouse( &p );
 	
 	trigger = SDLU_Button();
-	if( inKey == kEscapeKey )
+	if( inSDLKey == SDLK_ESCAPE )
 	{
 		*item = kResume;
 		trigger = true;
