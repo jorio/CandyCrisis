@@ -27,9 +27,3 @@
 #include "SDL_endian.h"
 
 #endif
-#if __APPLE__
-
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_endian.h>
-
-#endif
