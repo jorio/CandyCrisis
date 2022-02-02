@@ -1,7 +1,5 @@
 // level.c
 
-#include "stdafx.h"
-
 #include <stdlib.h>
 #include <math.h>
 #include <algorithm>

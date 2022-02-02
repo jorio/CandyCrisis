@@ -1,6 +1,5 @@
 // opponent.c
 
-#include "stdafx.h"
 #include "SDLU.h"
 
 #include <math.h>

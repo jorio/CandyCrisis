@@ -5,12 +5,6 @@
 // decent to the end user...
 
 
-#include "stdafx.h"
-
-#if __APPLE__
-#include <Cocoa/Cocoa.h>
-#endif
-
 #include "SDLU.h"
 
 #include <algorithm>

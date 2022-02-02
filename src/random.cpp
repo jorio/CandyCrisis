@@ -1,6 +1,5 @@
 // random.c
 
-#include "stdafx.h"
 #include <stdlib.h>
 
 #include "main.h"

@@ -1,7 +1,5 @@
 // music.c
 
-#include "stdafx.h"
-
 #include <string.h>
 #include <vector>
 #include <fstream>

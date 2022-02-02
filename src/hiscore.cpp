@@ -1,6 +1,5 @@
 // hiscore.c
 
-#include "stdafx.h"
 #include "SDLU.h"
 
 #include <string.h>

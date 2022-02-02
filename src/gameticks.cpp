@@ -1,6 +1,6 @@
 // gameticks.c
 
-#include "stdafx.h"
+#include <SDL_timer.h>
 #include "gameticks.h"
 
 unsigned int  baseTickCount, freezeTickCount;

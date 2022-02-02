@@ -1,6 +1,5 @@
 // control.c
 
-#include "stdafx.h"
 #include "main.h"
 #include "control.h"
 #include "moving.h"

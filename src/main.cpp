@@ -245,16 +245,6 @@
 //                 2.0.0 INITIAL RELEASE
 //
 
-#include "stdafx.h"
-
-#if _WIN32
-#include <windows.h>
-#include <io.h> // for _chdir
-#endif
-#if __APPLE__
-#include <Cocoa/Cocoa.h>
-#endif
-
 #include "SDLU.h"
 
 #include "main.h"

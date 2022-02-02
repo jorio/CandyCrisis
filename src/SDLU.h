@@ -2,10 +2,9 @@
 ///  SDLU.h
 ///
 
+#pragma once
 
-#ifndef __SDLU__
-#define __SDLU__
-
+#include <SDL.h>
 #include "MTypes.h"
 
 #define BLUE_MASK          0x0000FF
@@ -46,6 +45,3 @@ MBoolean     SDLU_CheckASCIITyping(char* ascii);
 MBoolean     SDLU_CheckSDLTyping(SDL_Keycode* sdlKey);
 MBoolean     SDLU_IsForeground();
 void         SDLU_Present();
-
-
-#endif

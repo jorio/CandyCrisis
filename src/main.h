@@ -1,6 +1,7 @@
 // main.h
 
 
+#include <SDL.h>
 #include "MTypes.h"
 
 
@@ -237,7 +238,7 @@ enum
 #define kLastBlob kBlob7
 #define kBlobTypes (kLastBlob - kFirstBlob + 1)
 
-constexpr double pi = M_PI;
+constexpr double pi = 3.14159265358979323846264338327950288;
 
 #define arrsize(x) int(sizeof((x)) / sizeof((x)[0]))
 

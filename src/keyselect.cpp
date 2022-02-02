@@ -1,6 +1,5 @@
 // keyselect.c
 
-#include "stdafx.h"
 #include "SDLU.h"
 
 #include <stdio.h>

@@ -1,7 +1,5 @@
 // graphics.c
 
-#include "stdafx.h"
-
 #include <stdlib.h>
 #include "SDLU.h"
 #include "main.h"

@@ -1,6 +1,5 @@
 // soundfx.c
 
-#include "stdafx.h"
 #include "main.h"
 #include "soundfx.h"
 #include "music.h"

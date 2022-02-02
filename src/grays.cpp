@@ -1,6 +1,5 @@
 // grays.c
 
-#include "stdafx.h"
 #include "SDLU.h"
 
 #include "main.h"

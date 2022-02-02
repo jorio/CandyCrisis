@@ -7,7 +7,6 @@
 ///
 
 
-#include "stdafx.h"
 #include "MTypes.h"
 #include <algorithm>
 

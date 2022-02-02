@@ -1,6 +1,5 @@
 // tweak.c
 
-#include "stdafx.h"
 #include <math.h>
 
 #include "main.h"

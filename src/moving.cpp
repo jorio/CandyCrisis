@@ -1,6 +1,5 @@
 // moving.c
 
-#include "stdafx.h"
 #include "main.h"
 #include "moving.h"
 #include "players.h"

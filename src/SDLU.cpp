@@ -6,7 +6,6 @@
 ///  John Stiles, 2002/10/12
 ///
 
-#include "stdafx.h"
 #include "SDLU.h"
 #include "gameticks.h"
 #include "music.h"

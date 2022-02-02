@@ -1,6 +1,5 @@
 // prefs.c
 
-#include "stdafx.h"
 #include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
