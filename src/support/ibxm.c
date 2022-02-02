@@ -8,6 +8,8 @@ const char *IBXM_VERSION = "ibxm/ac mod/xm/s3m replay 20191214 (c)mumart@gmail.c
 
 static const int FP_SHIFT = 15, FP_ONE = 32768, FP_MASK = 32767;
 
+static const int MOD_STEREO_SEPARATION = 50;  // ibxm default was 76.5
+
 static const int exp2_table[] = {
         32768, 32946, 33125, 33305, 33486, 33667, 33850, 34034,
         34219, 34405, 34591, 34779, 34968, 35158, 35349, 35541,
@@ -747,9 +749,9 @@ static struct module* module_load_mod( struct data *data, char *message ) {
             return NULL;
         }
         for( idx = 0; idx < module->num_channels; idx++ ) {
-            module->default_panning[ idx ] = 51;
+            module->default_panning[ idx ] = 128 - MOD_STEREO_SEPARATION / 2;
             if( ( idx & 3 ) == 1 || ( idx & 3 ) == 2 ) {
-                module->default_panning[ idx ] = 204;
+                module->default_panning[ idx ] = 128 + MOD_STEREO_SEPARATION / 2;
             }
         }
         module_data_idx = 1084;
