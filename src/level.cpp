@@ -40,7 +40,7 @@ int difficultyTicks, backdropTicks, backdropFrame;
 #define kNumSplats 16
 #define kIdleSplat -2
 #define kFallingSplat -1
-#define kTitleItems 7
+#define kTitleItems 8
 #define kIncrementPerFrame 2
 #define kSplatType 4
 
@@ -52,6 +52,18 @@ static MBoolean shouldFullRepaint = false;
 static int startMenuTime = 0;
 static int splatState[kNumSplats], splatColor[kNumSplats], splatSide[kNumSplats];
 static MRect splatBlob[kNumSplats];
+
+enum
+{
+    kTitleItemTutorial,
+    kTitleItem1PGame,
+    kTitleItem2PGame,
+    kTitleItemSolitaire,
+    kTitleItemHighScores,
+    kTitleItemControls,
+    kTitleItemCredits,
+    kTitleItemQuit,
+};
 
 struct {
 	const char* name;
@@ -65,6 +77,7 @@ struct {
 		{ "\x03 Solitaire Crisis",  {102,247,106}, {125,237,179}, {358, 183, 428, 458} },
 		{ "\x03 High Scores",       {234,244,132}, {192,218, 85}, {429, 280, 478, 390} },
 		{ "\x03 Controls",          { 64, 88,212}, { 62, 87,205}, {430, 187, 479, 280} },
+		{ "\x03 Credits",           {245,  7, 78}, {254,128,156}, {  6, 370,  59, 423} },
 		{ "\x03 Quit",              {107,105,106}, {169,167,168}, {433, 390, 477, 446} }
 };
 
@@ -132,6 +145,8 @@ void GameStartMenu( void )
 	SDL_Rect        meterRect[2] = { { 30, 360, 110, 20 }, { 530, 360, 110, 20 } };
     int             titleGlow[kTitleItems];
     int             shouldAddBlob;
+    const int       kTitleGlowOff = useNewTitle? 150: 192;
+    const bool      secretCreditsItem = !useNewTitle;
     
 	const int       kLeftSide = 0, kRightSide = 1, kGlow = 2, kCursor = 3;
 	
@@ -151,8 +166,13 @@ redo:
 	
 	for( count=0; count<kTitleItems; count++ )
 	{
-		titleGlow[count] = 192;
+		titleGlow[count] = kTitleGlowOff;
 	}
+
+    if (secretCreditsItem)
+    {
+        titleGlow[kTitleItemCredits] = 0;
+    }
 	
 	for( count=0; count<kNumSplats; count++ )
 	{
@@ -205,7 +225,7 @@ redo:
 			}
 			item.rect.right = dPoint.h;
 			dPoint.h = left;
-			dPoint.v += 28;
+			dPoint.v += 24;
 		}
 		SDLU_ReleaseSurface(gameStartSurface);
 	}
@@ -433,6 +453,11 @@ redo:
 			}
 		}
 
+        if (secretCreditsItem)
+        {
+            titleGlow[kTitleItemCredits] = 0;
+        }
+
 		// update glows
 		for (int glowUpdate=0; glowUpdate < kTitleItems; ++glowUpdate)
 		{
@@ -447,7 +472,7 @@ redo:
 			else 
 			{
 				titleGlow[glowUpdate] += (6 * startSkip);
-				if( titleGlow[glowUpdate] > 192 ) titleGlow[glowUpdate] = 192;
+				if( titleGlow[glowUpdate] > kTitleGlowOff ) titleGlow[glowUpdate] = kTitleGlowOff;
 			}
 			
 			if( titleGlow[glowUpdate] != oldGlow )
@@ -510,15 +535,15 @@ redo:
 
 	if( finished ) 
 	{
-		selected = 6; // quit
+		selected = kTitleItemQuit;
 	}
 	
 	switch( selected )
 	{
-		case 0: 
-		case 1: 
-		case 2:
-		case 3:
+		case kTitleItemTutorial:
+		case kTitleItem1PGame:
+		case kTitleItem2PGame:
+		case kTitleItemSolitaire:
 			PlayMono( kChime ); 
 			break;
 	}
@@ -531,8 +556,7 @@ redo:
 
 	switch( selected )
 	{
-		// Tutorial
-		case 0: 
+		case kTitleItemTutorial:
 			InitGame( kAutoControl, kNobodyControl );
 			level = kTutorialLevel;
 			BeginRound( true );
@@ -540,10 +564,9 @@ redo:
 			QuickFadeIn( NULL );
 			break;				
 
-		// 1P, 2P, Solitaire
-		case 1:
-		case 2:
-		case 3:
+		case kTitleItem1PGame:
+		case kTitleItem2PGame:
+		case kTitleItemSolitaire:
         {
             int player2[] = { 0, kAIControl, kPlayerControl, kNobodyControl };
             
@@ -553,14 +576,12 @@ redo:
             break;
         }
 		
-		// High scores
-		case 4: 
+		case kTitleItemHighScores:
 			ShowHiscore();
 			ShowBestCombo();
 			break;
 			
-		// Controls
-		case 5:
+		case kTitleItemControls:
 		{
 			int currentID = RandomBefore(kLevels) * 100;
 	
@@ -573,9 +594,14 @@ redo:
 			QuickFadeOut( NULL );
 			goto redo;
 		}
+
+        case kTitleItemCredits:
+        {
+            SharewareVictory();
+            goto redo;
+        }
 		
-		// Quit
-		case 6:
+		case kTitleItemQuit:
 			finished = true;
 			break;
 	}
@@ -1048,7 +1074,7 @@ const char *gameCredits[][6] =
 	{ "Music", "Timewalker", "Jason, Silents", "Chromatic Dragon", "Ng Pei Sin", "" },
 	{ "Open Source", "gcc, mingw", "SDL", "libpng", "IJG", "zlib" },
 	{ "Special Thanks", "Sam Lantinga", "Carey Lening", "modarchive.com", "digitalblasphemy.com", "" },	  
-	{ "Please Register!", "The full version of", "Candy Crisis features", "twelve stages and also", "includes two player", "mode." } 		  
+	{ "", "", "", "", "", "" }
 };
 
 void SharewareVictory( void )
