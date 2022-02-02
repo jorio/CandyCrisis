@@ -12,6 +12,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define STBI_ONLY_JPEG
+#define STBI_ONLY_PNG
+#define STB_IMAGE_IMPLEMENTATION
+#include "support/stb_image.h"
 
 SDL_Surface* blobSurface;
 SDL_Surface* maskSurface;
@@ -182,26 +186,41 @@ SDL_Surface* LoadPICTAsSurface( int pictID, int depth )
 {
 	const char*  filename;
 	SDL_Surface* surface;
-    
+    SDL_Rect     rect = {};
+    uint8_t*     pixels = nullptr;
+
 	filename = QuickResourceName( "PICT", pictID, ".jpg" );
-	if( FileExists( filename ) )
-	{
-		surface = IMG_Load( filename );
-	}
-	else
+	if( !FileExists( filename ) )
 	{
 		filename = QuickResourceName( "PICT", pictID, ".png" );
-		if( FileExists( filename ) )
-		{
-			surface = IMG_Load( filename );
-		}
-		else
-		{
-			// Fail
-			return NULL;
-		}
 	}
-	
+    if( !FileExists( filename ) )
+    {
+        return nullptr;
+    }
+
+    pixels = stbi_load(filename, &rect.w, &rect.h, NULL, 3);
+
+    surface = SDLU_InitSurface(&rect, 32);
+    SDL_LockSurface(surface);
+
+    uint8_t* srcPixels = pixels;
+    uint8_t* destPixels = (uint8_t*) surface->pixels;
+    for (int i = 0; i < rect.w*rect.h; i++)
+    {
+        destPixels[0] = srcPixels[2];
+        destPixels[1] = srcPixels[1];
+        destPixels[2] = srcPixels[0];
+        destPixels[3] = 0xFF;
+        destPixels += 4;
+        srcPixels += 3;
+    }
+
+    SDL_UnlockSurface(surface);
+
+    free(pixels);
+    pixels = NULL;
+
 	if( depth != 0 )
 	{
 		SDLU_ChangeSurfaceDepth( &surface, depth );

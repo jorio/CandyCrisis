@@ -442,13 +442,19 @@ void RefreshAll( void )
 
 void Error( const char* extra )
 {
-#if _WIN32
-	char error[1024];
-	sprintf_s(error, "Sorry, a critical error has occurred. Please report the following error message:\n    %s", extra );
-	MessageBox(NULL, error, "Candy Crisis", MB_OK | MB_ICONERROR);
- #else
- 	fprintf(stderr, "Sorry, a critical error has occurred. Please report the following error message:\n    %s", extra );
-#endif
+    char error[1024];
+
+    snprintf(error, sizeof(error),
+             "Sorry, a critical error has occurred. Please report the following error message:\n    %s", extra);
+
+    fprintf(stderr, "%s\n", error);
+
+    SDL_ShowSimpleMessageBox(
+            SDL_MESSAGEBOX_ERROR,
+            "Candy Crisis",
+            error,
+            nullptr);
+
     abort();
 }
 
@@ -643,14 +649,6 @@ void Initialize(void)
 		Error("SDL_Init failed");
 	}
 
-	int desiredFormats = (IMG_INIT_JPG | IMG_INIT_PNG);
-	int haveFormats = IMG_Init(desiredFormats);
-	if ((haveFormats & desiredFormats) != desiredFormats)
-	{
-		Error("IMG_Init failed");
-	}
-
-	atexit(IMG_Quit);
 	atexit(SDL_Quit);
 
     SDLU_Init();

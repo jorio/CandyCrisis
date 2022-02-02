@@ -6,7 +6,6 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_endian.h>
-#include <SDL_image.h>
 
 #if _WIN32
 
@@ -26,13 +25,11 @@
 
 #include "SDL.h"
 #include "SDL_endian.h"
-#include "SDL_image.h"
 
 #endif
 #if __APPLE__
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_endian.h>
-#include <SDL2_image/SDL_image.h>
 
 #endif
