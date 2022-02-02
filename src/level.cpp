@@ -1072,7 +1072,7 @@ const char *gameCredits[][6] =
 	{ "Music", "Leanne Stiles", "fmod", "Lizardking", "Armadon, Explizit", "Leviathan, Nemesis" },
 	{ "Music", "Jester, Pygmy", "Siren", "Sirrus", "Scaven, FC", "Spring" }, 		  
 	{ "Music", "Timewalker", "Jason, Silents", "Chromatic Dragon", "Ng Pei Sin", "" },
-	{ "Open Source", "gcc, mingw", "SDL", "libpng", "IJG", "zlib" },
+	{ "Source Port", "Iliyas Jorio", "github.com/jorio/candycrisis", "", "", "" },
 	{ "Special Thanks", "Sam Lantinga", "Carey Lening", "modarchive.com", "digitalblasphemy.com", "" },	  
 	{ "", "", "", "", "", "" }
 };
@@ -1084,8 +1084,8 @@ void SharewareVictory( void )
 	SDL_Surface*    frontBuffer;
 	SDL_Rect        creditSrcSDLRect, bufferSrcSDLRect, bufferDstSDLRect;
 	MRect           creditSrcRect = { 0, 0, 369, 150 };
-	MRect           bufferSrcRect = { 0, 50, 480, 300 };
-	MRect           bufferDstRect = { 0, 0, 480, 250 };
+	MRect           bufferSrcRect = { 0, 50, 480, 350 };
+	MRect           bufferDstRect = { 0, 0, 480, 300 };
 	MPoint          dPoint = { 450, 50 }, lPoint, cPoint;
 	int             scroll, ticks, x, y;
 	int             delay = 2;
@@ -1252,7 +1252,7 @@ void RegisteredVictory( void )
 		}
 	}
 	
-	textFont = GetFont( picFont );
+	textFont = GetFont( picTinyFont );
 	titleFont = GetFont( picHiScoreFont );
 	bubbleFont = GetFont( picBubbleFont );
 	
