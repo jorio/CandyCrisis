@@ -1051,7 +1051,6 @@ const char *gameCredits[][6] =
 	{ "Please Register!", "The full version of", "Candy Crisis features", "twelve stages and also", "includes two player", "mode." } 		  
 };
 
-/*
 void SharewareVictory( void )
 {
 	SkittlesFontPtr textFont, titleFont;
@@ -1090,12 +1089,12 @@ void SharewareVictory( void )
 	DrawPICTInSurface( g_frontSurface, picSharewareVictory );
     SDLU_Present();
 	
-	backBuffer = SDLU_InitSurface( &bufferDstSDLRect, 16 );
+	backBuffer = SDLU_InitSurface( &bufferDstSDLRect, 32 );
 	
 	SDLU_BlitSurface( g_frontSurface, &bufferSrcSDLRect,
 	                  backBuffer,   &bufferDstSDLRect   );
 
-	frontBuffer = SDLU_InitSurface( &bufferDstSDLRect, 16 );
+	frontBuffer = SDLU_InitSurface( &bufferDstSDLRect, 32 );
 	
 	QuickFadeIn( NULL );	
 
@@ -1123,13 +1122,13 @@ void SharewareVictory( void )
 				{
 					text = gameCredits[y][0];
 					thisFade = fade[cPoint.v >> 2];
-					
+
 					while( *text )
 					{
-						SurfaceBlitWeightedCharacter( titleFont, *text++, &cPoint, 31, 31, 0, thisFade );
+						SurfaceBlitWeightedCharacter( titleFont, *text++, &cPoint, 255, 255, 0, _5TO8(thisFade) );
 					}
 				}
-				
+
 				lPoint.v += 50;
 			}
 			
@@ -1145,10 +1144,10 @@ void SharewareVictory( void )
 					{
 						text = gameCredits[y][x];
 						thisFade = fade[cPoint.v >> 2];
-						
+
 						while( *text )
 						{
-							SurfaceBlitWeightedCharacter( textFont, *text++, &cPoint, 31, 31, 0, thisFade );
+							SurfaceBlitWeightedCharacter( textFont, *text++, &cPoint, 255, 255, 0, _5TO8(thisFade) );
 						}
 					}
 
@@ -1184,7 +1183,6 @@ out:
 	SDL_FreeSurface( backBuffer );
 	SDL_FreeSurface( frontBuffer );
 }
-*/
 
 void RegisteredVictory( void )
 {

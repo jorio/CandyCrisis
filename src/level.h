@@ -10,6 +10,7 @@ void SelectRandomLevel( void );
 void IncrementLevel( void );
 void TotalVictory( void );
 void RegisteredVictory( void );
+void SharewareVictory( void );
 void InitStage( void );
 void DrawStage( void );
 void GameStartMenu( void );
