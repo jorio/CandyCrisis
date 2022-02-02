@@ -236,7 +236,7 @@ enum
 #define kLastBlob kBlob7
 #define kBlobTypes (kLastBlob - kFirstBlob + 1)
 
-#define pi M_PI
+constexpr double pi = M_PI;
 
 #define arrsize(x) int(sizeof((x)) / sizeof((x)[0]))
 
