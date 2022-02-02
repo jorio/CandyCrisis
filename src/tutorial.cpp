@@ -363,7 +363,7 @@ static int CalculateBalloonWidth( char *message )
 				break;
 			
 			default:
-				currentWidth += balloonFont->width[in];
+				currentWidth += balloonFont->width[(uint8_t) in];
 				break;
 		}
 	}

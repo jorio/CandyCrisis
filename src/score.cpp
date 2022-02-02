@@ -130,7 +130,7 @@ void ShowScore( int player )
 void DrawCharacter( char which, const MRect *myRect )
 {
 	MRect   srcRect;
-	char    count, result;
+	int     count, result;
 	
 	result = -1;
 	for( count = 0; count < arrsize(characterList); count++ )

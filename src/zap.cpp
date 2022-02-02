@@ -60,7 +60,7 @@ void ZapScoreDisplay( int player, int amount, int multiplier, int x, int y, int 
 
 		zapScoreWidth[player] = 0;
 		scan = zapScore[player];
-		while( *scan ) zapScoreWidth[player] += zapFont->width[*scan++];
+		while( *scan ) zapScoreWidth[player] += zapFont->width[(uint8_t) * scan++];
 		
 		if( (zapScorePt[player].h + zapScoreWidth[player] + 8) > (kGridAcross * kBlobHorizSize) )
 		{

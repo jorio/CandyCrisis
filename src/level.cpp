@@ -1087,7 +1087,6 @@ void SharewareVictory( void )
 	MRect           bufferDstRect = { 0, 0, 480, 300 };
 	MPoint          dPoint = { 450, 50 }, lPoint, cPoint;
 	int             scroll, ticks, x, y;
-	int             delay = 2;
 	const char*     text;
 	int             thisFade;
 	const char fade[120] =   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //0

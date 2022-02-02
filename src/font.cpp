@@ -112,7 +112,7 @@ int GetTextWidth( SkittlesFontPtr font, const char *text )
 	int width = 0;
 	while( *text )
 	{
-		width += font->width[*text++];
+		width += font->width[(uint8_t) *text++];
 	}
 	
 	return width;
