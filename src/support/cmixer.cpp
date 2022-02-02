@@ -608,6 +608,7 @@ void cmixer::WavStream::InitFromWAVFile(const char* path)
     this->bitdepth = bitdepth;
     this->channels = channels;
     this->idx = 0;
+	this->interpolate = true;
 
     userBuffer.reserve(sz);
     for (int i = 0; i < sz; i++)

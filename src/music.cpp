@@ -30,7 +30,7 @@ void EnableMusic( MBoolean on )
 {
     if (s_musicChannel)
     {
-        s_musicChannel->SetGain(on? 0.75: 0.0);
+        s_musicChannel->SetGain(on? 1.0: 0.0);
     }
 }
 
