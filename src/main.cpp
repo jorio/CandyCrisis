@@ -313,25 +313,21 @@ static char  candyCrisisResources[512];
 
 MBoolean fullscreen = false;
 MBoolean widescreen = false;
-MBoolean useNewTitle = true;
-MBoolean bilinearFiltering = false;
+MBoolean useNewTitle = widescreen;
+MBoolean crispUpscaling = false;
 int windowedScale = 2;
 
-#if _WIN32
-int WinMain(
-	_In_ HINSTANCE,
-	_In_opt_ HINSTANCE,
-	_In_ LPSTR,
-	_In_ int)
-#else
-int main(int, char *[])
-#endif
+int main(int argc, char *argv[])
 {
-	Initialize( );	
+	Initialize( );
 
 	LoadPrefs( );
-	
-	ReserveMonitor( );	
+    ParseCommandLine( argc, argv );
+
+    if ( widescreen )
+        useNewTitle = true;
+
+	ReserveMonitor( );
 	ShowTitle( );
 
 	ChooseMusic( 13 );
@@ -571,18 +567,14 @@ void ReserveMonitor( void )
 	SDL_ShowCursor( SDL_DISABLE );
 	
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, bilinearFiltering? "best": "0");
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, crispUpscaling? "0": "best");
     
     int resW = 640;
     int resH = widescreen? 360: 480;
-    
-    if (fullscreen) {
-        SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP, &g_window, &g_renderer);
-    } else {
-        SDL_CreateWindowAndRenderer(resW*windowedScale, resH*windowedScale, SDL_WINDOW_RESIZABLE, &g_window, &g_renderer);
-    }
 
-    SDL_RenderSetIntegerScale(g_renderer, bilinearFiltering ? SDL_FALSE : SDL_TRUE);
+    SDL_CreateWindowAndRenderer(resW*windowedScale, resH*windowedScale, SDL_WINDOW_RESIZABLE, &g_window, &g_renderer);
+
+    SDL_RenderSetIntegerScale(g_renderer, crispUpscaling ? SDL_TRUE : SDL_FALSE);
 
     SDL_RenderSetLogicalSize(g_renderer, resW, resH);
     SDL_SetWindowTitle(g_window, "Candy Crisis");
@@ -598,10 +590,17 @@ void ReserveMonitor( void )
                                         SDL_PIXELFORMAT_RGB888,
                                         SDL_TEXTUREACCESS_STREAMING,
                                         640, 480);
+
+    SetFullscreen(fullscreen);
 }
 
 void ReleaseMonitor( void )
 {
+}
+
+void SetFullscreen( MBoolean fullscreenMode )
+{
+    SDL_SetWindowFullscreen(g_window, fullscreenMode? SDL_WINDOW_FULLSCREEN_DESKTOP: 0);
 }
 
 int Warp( void )

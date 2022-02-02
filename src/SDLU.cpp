@@ -31,9 +31,6 @@ static MPoint       s_mousePosition;
 // for event loop
 static MBoolean     s_isForeground = true;
 
-extern MBoolean  widescreen;
-extern MBoolean  fullscreen;
- 
 // for checktyping
 struct BufferedKey
 {

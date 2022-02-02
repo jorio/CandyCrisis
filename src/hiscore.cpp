@@ -28,8 +28,6 @@
 
 using std::min;
 
-extern MBoolean widescreen;
-
 Combo defaultBest = 
 {
 	/*bestGrid[kGridAcross][kGridDown] = */ 

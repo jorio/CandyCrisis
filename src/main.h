@@ -253,7 +253,7 @@ extern signed char nextA[2], nextB[2], nextM[2], nextG[2], colorA[2], colorB[2],
 extern int chain[2];
 extern int blobTime[2], startTime, endTime;
 extern MBoolean finished, pauseKey, showStartMenu;
-extern MBoolean fullscreen;
+extern MBoolean fullscreen, widescreen, crispUpscaling;
 extern signed char grid[2][kGridAcross][kGridDown], suction[2][kGridAcross][kGridDown],
 	charred[2][kGridAcross][kGridDown], glow[2][kGridAcross][kGridDown];
 extern MRect playerWindowZRect, playerWindowRect[2];

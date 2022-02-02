@@ -85,7 +85,6 @@ const int kCursorWidth  = 32;
 const int kCursorHeight = 32;
 
 extern MBoolean useNewTitle;
-extern MBoolean widescreen;
 
 static void InsertCursor( MPoint mouseHere, SDL_Surface* scratch, SDL_Surface* surface )
 {
