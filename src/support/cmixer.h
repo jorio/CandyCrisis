@@ -30,87 +30,120 @@
 
 #define BUFFER_SIZE (512)
 
-namespace cmixer {
+namespace cmixer
+{
 
-enum {
-	CM_STATE_STOPPED,
-	CM_STATE_PLAYING,
-	CM_STATE_PAUSED
-};
+	enum
+	{
+		CM_STATE_STOPPED,
+		CM_STATE_PLAYING,
+		CM_STATE_PAUSED
+	};
 
-struct Source {
-	int16_t pcmbuf[BUFFER_SIZE];	// Internal buffer with raw stereo PCM
-	int samplerate;					// Stream's native samplerate
-	int length;						// Stream's length in frames
-	int end;						// End index for the current play-through
-	int state;						// Current state (playing|paused|stopped)
-	int64_t position;				// Current playhead position (fixed point)
-	int lgain, rgain;				// Left and right gain (fixed point)
-	int rate;						// Playback rate (fixed point)
-	int nextfill;					// Next frame idx where the buffer needs to be filled
-	bool loop;						// Whether the source will loop when `end` is reached
-	bool rewind;					// Whether the source will rewind before playing
-	bool active;					// Whether the source is part of `sources` list
-	double gain;					// Gain set by `cm_set_gain()`
-	double pan;						// Pan set by `cm_set_pan()`
-	std::function<void()> onComplete;		// Callback
+	struct Source
+	{
+		int16_t pcmbuf[BUFFER_SIZE];    // Internal buffer with raw stereo PCM
+		int samplerate;                 // Stream's native samplerate
+		int length;                     // Stream's length in frames
+		int end;                        // End index for the current play-through
+		int state;                      // Current state (playing|paused|stopped)
+		int64_t position;               // Current playhead position (fixed point)
+		int lgain, rgain;               // Left and right gain (fixed point)
+		int rate;                       // Playback rate (fixed point)
+		int nextfill;                   // Next frame idx where the buffer needs to be filled
+		bool loop;                      // Whether the source will loop when `end` is reached
+		bool rewind;                    // Whether the source will rewind before playing
+		bool active;                    // Whether the source is part of `sources` list
+		bool interpolate;               // Interpolated resampling when played back at a non-native rate
+		double gain;                    // Gain set by `cm_set_gain()`
+		double pan;                     // Pan set by `cm_set_pan()`
+		std::function<void()> onComplete;        // Callback
 
-protected:
-	Source(int theSampleRate, int theLength);
+		void ClearPrivate();
 
-	virtual void Rewind2() = 0;
-	virtual void FillBuffer(int16_t* buffer, int length) = 0;
+	protected:
+		Source();
 
-public:
-	void Rewind();
-	void RecalcGains();
-	void FillBuffer(int offset, int length);
-	void Process(int len);
+		void Init(int samplerate, int length);
 
-public:
-	~Source();
-	double GetLength() const;
-	double GetPosition() const;
-	int GetState() const;
-	void SetGain(double gain);
-	void SetPan(double pan);
-	void SetPitch(double pitch);
-	void SetLoop(bool loop);
-	void Play();
-	void Pause();
-	void TogglePause();
-	void Stop();
-};
+		virtual void RewindImplementation() = 0;
 
-class WavStream : public Source {
-	int bitdepth;
-	int channels;
-	int idx;
+		virtual void ClearImplementation() = 0;
 
-	std::vector<char> udata;
+		virtual void FillBuffer(int16_t* buffer, int length) = 0;
 
-	void Rewind2();
-	void FillBuffer(int16_t* buffer, int length);
+	public:
+		virtual ~Source();
 
-	inline uint8_t* data8() { return (uint8_t*)udata.data(); }
-	inline int16_t* data16() { return (int16_t*)udata.data(); }
+		void Clear();
 
-public:
-	bool bigEndian;
+		void Rewind();
 
-	WavStream(
-		int theSampleRate,
-		int theBitDepth,
-		int nChannels,
-		std::vector<char>&& data
-	);
-};
+		void RecalcGains();
+
+		void FillBuffer(int offset, int length);
+
+		void Process(int len);
+
+		double GetLength() const;
+
+		double GetPosition() const;
+
+		int GetState() const;
+
+		void SetGain(double gain);
+
+		void SetPan(double pan);
+
+		void SetPitch(double pitch);
+
+		void SetLoop(bool loop);
+
+		void SetInterpolation(bool interpolation);
+
+		void Play();
+
+		void Pause();
+
+		void TogglePause();
+
+		void Stop();
+	};
+
+	class WavStream : public Source
+	{
+		int bitdepth;
+		int channels;
+		int idx;
+		std::vector<char> userBuffer;
+
+		void ClearImplementation() override;
+
+		void RewindImplementation() override;
+
+		void FillBuffer(int16_t* buffer, int length) override;
+
+		inline const uint8_t* data8() const
+		{ return reinterpret_cast<const uint8_t*>(userBuffer.data()); }
+
+		inline const int16_t* data16() const
+		{ return reinterpret_cast<const int16_t*>(userBuffer.data()); }
+
+	public:
+		WavStream();
+
+        void InitFromWAVFile(const char* path);
+	};
 
 
-void InitWithSDL();
-void ShutdownWithSDL();
-double GetMasterGain();
-void SetMasterGain(double);
-WavStream LoadWAVFromFile(const char* path);
+	void InitWithSDL();
+
+	void ShutdownWithSDL();
+
+	double GetMasterGain();
+
+	void SetMasterGain(double);
+
+	WavStream LoadWAVFromFile(const char* path);
 
 }

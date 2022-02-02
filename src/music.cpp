@@ -92,7 +92,7 @@ void ChooseMusic( short which )
     
     if (which >= 0 && which <= k_songs)
     {
-        printf("Music: %d\n" , which + 128);
+        //printf("Music: %d\n" , which + 128);
         
         auto qrn = QuickResourceName("mod", which+128, ".mod");
         if (!FileExists(qrn)) {
@@ -110,5 +110,14 @@ void ChooseMusic( short which )
     
         musicSelection = which;
         s_musicPaused  = 0;
+    }
+}
+
+void ShutdownMusic()
+{
+    if (s_musicChannel)
+    {
+        delete s_musicChannel;
+        s_musicChannel = NULL;
     }
 }

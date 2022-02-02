@@ -47,7 +47,8 @@ using namespace cmixer;
 //-----------------------------------------------------------------------------
 // Global mixer
 
-static struct Mixer {
+static struct Mixer
+{
 	SDL_mutex* sdlAudioMutex;
 
 	std::list<Source*> sources;   // Linked list of active (playing) sources
@@ -56,11 +57,15 @@ static struct Mixer {
 	int gain;                     // Master gain (fixed point)
 
 	void Init(int samplerate);
+
 	void Process(int16_t* dst, int len);
+
 	void Lock();
+
 	void Unlock();
+
 	void SetMasterGain(double newGain);
-} gMixer;
+} gMixer = {};
 
 //-----------------------------------------------------------------------------
 // Global init/shutdown
@@ -84,8 +89,9 @@ void cmixer::InitWithSDL()
 	fmt.format = AUDIO_S16;
 	fmt.channels = 2;
 	fmt.samples = 1024;
-	fmt.callback = [](void* udata, Uint8* stream, int size) {
-		gMixer.Process((int16_t*)stream, size / 2);
+	fmt.callback = [](void* udata, Uint8* stream, int size)
+	{
+		gMixer.Process((int16_t*) stream, size / 2);
 	};
 
 	SDL_AudioSpec got;
@@ -103,11 +109,18 @@ void cmixer::InitWithSDL()
 
 void cmixer::ShutdownWithSDL()
 {
-	if (sdlDeviceID) {
+	if (sdlDeviceID)
+	{
 		SDL_CloseAudioDevice(sdlDeviceID);
 		sdlDeviceID = 0;
 	}
-	if (sdlAudioSubSystemInited) {
+	if (gMixer.sdlAudioMutex)
+	{
+		SDL_DestroyMutex(gMixer.sdlAudioMutex);
+		gMixer.sdlAudioMutex = nullptr;
+	}
+	if (sdlAudioSubSystemInited)
+	{
 		SDL_QuitSubSystem(SDL_INIT_AUDIO);
 		sdlAudioSubSystemInited = false;
 	}
@@ -154,7 +167,8 @@ void Mixer::SetMasterGain(double newGain)
 void Mixer::Process(int16_t* dst, int len)
 {
 	// Process in chunks of BUFFER_SIZE if `len` is larger than BUFFER_SIZE
-	while (len > BUFFER_SIZE) {
+	while (len > BUFFER_SIZE)
+	{
 		Process(dst, BUFFER_SIZE);
 		dst += BUFFER_SIZE;
 		len -= BUFFER_SIZE;
@@ -165,22 +179,26 @@ void Mixer::Process(int16_t* dst, int len)
 
 	// Process active sources
 	Lock();
-	for (auto si = sources.begin(); si != sources.end(); ) {
+	for (auto si = sources.begin(); si != sources.end();)
+	{
 		auto& s = **si;
 		s.Process(len);
 		// Remove source from list if it is no longer playing
-		if (s.state != CM_STATE_PLAYING) {
+		if (s.state != CM_STATE_PLAYING)
+		{
 			s.active = false;
 			si = sources.erase(si);
 		}
-		else {
+		else
+		{
 			++si;
 		}
 	}
 	Unlock();
 
 	// Copy internal buffer to destination and clip
-	for (int i = 0; i < len; i++) {
+	for (int i = 0; i < len; i++)
+	{
 		int x = (pcmmixbuf[i] * gain) >> FX_BITS;
 		dst[i] = CLAMP(x, -32768, 32767);
 	}
@@ -189,43 +207,73 @@ void Mixer::Process(int16_t* dst, int len)
 //-----------------------------------------------------------------------------
 // Source implementation
 
-Source::Source(int theSampleRate, int theLength)
+Source::Source()
 {
-	memset(this, 0, sizeof(*this));
-	length = theLength;
-	samplerate = theSampleRate;
+	ClearPrivate();
+	active = false;
+}
+
+void Source::ClearPrivate()
+{
+	samplerate	= 0;
+	length		= 0;
+	end			= 0;
+	state		= CM_STATE_STOPPED;
+	position	= 0;
+	lgain		= 0;
+	rgain		= 0;
+	rate		= 0;
+	nextfill	= 0;
+	loop		= false;
+	rewind		= true;
+	interpolate = false;
+	// DON'T touch active. The source may still be in gMixer!
+	gain		= 0;
+	pan			= 0;
+	onComplete	= nullptr;
+}
+
+void Source::Clear()
+{
+	gMixer.Lock();
+	ClearPrivate();
+	ClearImplementation();
+	gMixer.Unlock();
+}
+
+void Source::Init(int theSampleRate, int theLength)
+{
+	this->samplerate = theSampleRate;
+	this->length = theLength;
 	SetGain(1);
 	SetPan(0);
 	SetPitch(1);
-	SetLoop(0);
+	SetLoop(false);
 	Stop();
 }
 
 Source::~Source()
 {
 	gMixer.Lock();
-	if (active) {
+	if (active)
+	{
 		gMixer.sources.remove(this);
 	}
 	gMixer.Unlock();
-	//CMEvent e;
-	//e.type = CM_EVENT_DESTROY;
-	//e.udata = udata;
-	//handler(&e);
 }
 
 void Source::Rewind()
 {
-	Rewind2();
+	RewindImplementation();
 	position = 0;
 	rewind = false;
 	end = length;
 	nextfill = 0;
 }
 
-void Source::FillBuffer(int offset, int length)
+void Source::FillBuffer(int offset, int fillLength)
 {
-	FillBuffer(pcmbuf + offset, length);
+	FillBuffer(pcmbuf + offset, fillLength);
 }
 
 void Source::Process(int len)
@@ -233,34 +281,40 @@ void Source::Process(int len)
 	int32_t* dst = gMixer.pcmmixbuf;
 
 	// Do rewind if flag is set
-	if (rewind) {
+	if (rewind)
+	{
 		Rewind();
 	}
 
 	// Don't process if not playing
-	if (state != CM_STATE_PLAYING) {
+	if (state != CM_STATE_PLAYING)
+	{
 		return;
 	}
 
 	// Process audio
-	while (len > 0) {
+	while (len > 0)
+	{
 		// Get current position frame
 		int frame = int(position >> FX_BITS);
 
 		// Fill buffer if required
-		if (frame + 3 >= nextfill) {
+		if (frame + 3 >= nextfill)
+		{
 			FillBuffer((nextfill * 2) & BUFFER_MASK, BUFFER_SIZE / 2);
 			nextfill += BUFFER_SIZE / 4;
 		}
 
 		// Handle reaching the end of the playthrough
-		if (frame >= end) {
+		if (frame >= end)
+		{
 			// As streams continiously fill the raw buffer in a loop we simply
 			// increment the end idx by one length and continue reading from it for
 			// another play-through
 			end = frame + this->length;
 			// Set state and stop processing if we're not set to loop
-			if (!loop) {
+			if (!loop)
+			{
 				state = CM_STATE_STOPPED;
 				if (onComplete != nullptr)
 					onComplete();
@@ -276,10 +330,12 @@ void Source::Process(int len)
 		len -= count * 2;
 
 		// Add audio to master buffer
-		if (rate == FX_UNIT) {
+		if (rate == FX_UNIT)
+		{
 			// Add audio to buffer -- basic
 			n = frame * 2;
-			for (int i = 0; i < count; i++) {
+			for (int i = 0; i < count; i++)
+			{
 				dst[0] += (pcmbuf[(n    ) & BUFFER_MASK] * lgain) >> FX_BITS;
 				dst[1] += (pcmbuf[(n + 1) & BUFFER_MASK] * rgain) >> FX_BITS;
 				n += 2;
@@ -287,9 +343,11 @@ void Source::Process(int len)
 			}
 			this->position += count * FX_UNIT;
 		}
-		else {
-			// Add audio to buffer -- interpolated
-			for (int i = 0; i < count; i++) {
+		else if (interpolate)
+		{
+			// Resample audio (with linear interpolation) and add to buffer
+			for (int i = 0; i < count; i++)
+			{
 				n = int(position >> FX_BITS) * 2;
 				int p = position & FX_MASK;
 				int a = pcmbuf[(n    ) & BUFFER_MASK];
@@ -303,18 +361,29 @@ void Source::Process(int len)
 				dst += 2;
 			}
 		}
-
+		else
+		{
+			// Resample audio (without interpolation) and add to buffer
+			for (int i = 0; i < count; i++)
+			{
+				n = int(position >> FX_BITS) * 2;
+				dst[0] += (pcmbuf[(n    ) & BUFFER_MASK] * lgain) >> FX_BITS;
+				dst[1] += (pcmbuf[(n + 1) & BUFFER_MASK] * rgain) >> FX_BITS;
+				position += rate;
+				dst += 2;
+			}
+		}
 	}
 }
 
 double Source::GetLength() const
 {
-	return length / (double)samplerate;
+	return length / (double) samplerate;
 }
 
 double Source::GetPosition() const
 {
-	return ((position >> FX_BITS) % length) / (double)samplerate;
+	return ((position >> FX_BITS) % length) / (double) samplerate;
 }
 
 int Source::GetState() const
@@ -345,10 +414,12 @@ void Source::SetPan(double newPan)
 void Source::SetPitch(double newPitch)
 {
 	double newRate;
-	if (newPitch > 0.) {
-		newRate = samplerate / (double)gMixer.samplerate * newPitch;
+	if (newPitch > 0.)
+	{
+		newRate = samplerate / (double) gMixer.samplerate * newPitch;
 	}
-	else {
+	else
+	{
 		newRate = 0.001;
 	}
 	rate = FX_FROM_FLOAT(newRate);
@@ -359,11 +430,17 @@ void Source::SetLoop(bool newLoop)
 	loop = newLoop;
 }
 
+void Source::SetInterpolation(bool newInterpolation)
+{
+	interpolate = newInterpolation;
+}
+
 void Source::Play()
 {
 	gMixer.Lock();
 	state = CM_STATE_PLAYING;
-	if (!active) {
+	if (!active)
+	{
 		active = true;
 		gMixer.sources.push_front(this);
 	}
@@ -381,9 +458,6 @@ void Source::TogglePause()
 		Play();
 	else if (state == CM_STATE_PLAYING)
 		Pause();
-	else {
-		;
-	}
 }
 
 void Source::Stop()
@@ -396,28 +470,28 @@ void Source::Stop()
 // WavStream implementation
 
 #define WAV_PROCESS_LOOP(X) \
-  while (n--) {             \
-    X                       \
-    dst += 2;               \
-    idx++;					\
-  }
+	while (n--)             \
+	{                       \
+		X                   \
+		dst += 2;           \
+		idx++;              \
+	}
 
-WavStream::WavStream(
-	int theSampleRate,
-	int theBitDepth,
-	int nChannels,
-	std::vector<char>&& data
-)
-	:Source(theSampleRate, int((data.size() / (theBitDepth / 8)) / nChannels))
-	,udata(data)
-	,idx(0)
-	,bitdepth(theBitDepth)
-	,channels(nChannels)
+WavStream::WavStream()
+	: Source()
 {
-	bigEndian = false;
+	ClearImplementation();
 }
 
-void WavStream::Rewind2()
+void WavStream::ClearImplementation()
+{
+	bitdepth = 0;
+	channels = 0;
+	idx = 0;
+	userBuffer.clear();
+}
+
+void WavStream::RewindImplementation()
 {
 	idx = 0;
 }
@@ -428,38 +502,41 @@ void WavStream::FillBuffer(int16_t* dst, int len)
 
 	len /= 2;
 
-	while (len > 0) {
+	while (len > 0)
+	{
 		n = MIN(len, length - idx);
 		len -= n;
-		if (bitdepth == 16 && channels == 1) {
+        if (bitdepth == 16 && channels == 1)
+		{
 			WAV_PROCESS_LOOP({
 				dst[0] = dst[1] = data16()[idx];
-				});
+			});
 		}
-		else if (bitdepth == 16 && channels == 2) {
+		else if (bitdepth == 16 && channels == 2)
+		{
 			WAV_PROCESS_LOOP({
 				x = idx * 2;
 				dst[0] = data16()[x];
 				dst[1] = data16()[x + 1];
-				});
+			});
 		}
-		else if (bitdepth == 8 && channels == 1) {
+		else if (bitdepth == 8 && channels == 1)
+		{
 			WAV_PROCESS_LOOP({
 				dst[0] = dst[1] = (data8()[idx] - 128) << 8;
-				});
+			});
 		}
-		else if (bitdepth == 8 && channels == 2) {
+		else if (bitdepth == 8 && channels == 2)
+		{
 			WAV_PROCESS_LOOP({
 				x = idx * 2;
 				dst[0] = (data8()[x] - 128) << 8;
 				dst[1] = (data8()[x + 1] - 128) << 8;
-				});
-		}
-		else {
-		    throw std::invalid_argument("big endian clips not supported");
+			});
 		}
 		// Loop back and continue filling buffer if we didn't fill the buffer
-		if (len > 0) {
+		if (len > 0)
+		{
 			idx = 0;
 		}
 	}
@@ -493,7 +570,7 @@ next:
 	return p + 8;
 }
 
-WavStream cmixer::LoadWAVFromFile(const char* path)
+void cmixer::WavStream::InitFromWAVFile(const char* path)
 {
 	int sz;
 	auto filebuf = LoadFile(path);
@@ -525,10 +602,14 @@ WavStream cmixer::LoadWAVFromFile(const char* path)
 	if (!p)
 		throw std::invalid_argument("no data subchunk");
 
-	return WavStream(
-		samplerate,
-		bitdepth,
-		channels,
-		std::vector<char>(p, p + sz));
-}
+    Clear();
+    Init(samplerate, sz / (channels * bitdepth / 8));
 
+    this->bitdepth = bitdepth;
+    this->channels = channels;
+    this->idx = 0;
+
+    userBuffer.reserve(sz);
+    for (int i = 0; i < sz; i++)
+        userBuffer.push_back(p[i]);
+}

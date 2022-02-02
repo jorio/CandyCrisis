@@ -1,9 +1,8 @@
 // soundfx.h
 
 
-void FMOD_ERRCHECK(int result);
-
-void InitSound( void );
+void InitSound();
+void ShutdownSound();
 void PlayStereo( short player, short which );
 void PlayStereoFrequency( short player, short which, short freq );
 void PlayMono( short which );

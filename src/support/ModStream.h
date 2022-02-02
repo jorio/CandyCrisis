@@ -18,8 +18,9 @@ class ModStream : public Source {
     int rbLength;
     double playbackSpeedMult;
 
-    void Rewind2();
-    void FillBuffer(int16_t* buffer, int length);
+    void ClearImplementation() override {};
+    void RewindImplementation() override {};
+    void FillBuffer(int16_t* buffer, int length) override;
 
 public:
     ModStream(std::vector<char>&& rawModule);

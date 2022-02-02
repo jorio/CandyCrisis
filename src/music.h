@@ -7,6 +7,7 @@ void ResumeMusic( void );
 void FastMusic( void );
 void SlowMusic( void );
 void ChooseMusic( short which );
+void ShutdownMusic();
 
 
 extern MBoolean musicOn;

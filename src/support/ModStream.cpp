@@ -5,14 +5,15 @@
 using namespace cmixer;
 
 ModStream::ModStream(std::vector<char> &&rawModuleData)
-        : Source(44100, INT_MAX)
+        : Source()
         , moduleFile(rawModuleData)
         , replayBuffer(2048*8)
         , rbOffset(0)
         , rbLength(0)
         , playbackSpeedMult(1.0)
 {
-    ibxm::data d;
+    Init(44100, INT_MAX);
+    ibxm::data d = {};
     d.buffer = moduleFile.data();
     d.length = moduleFile.size();
     char errors[256];
@@ -20,11 +21,6 @@ ModStream::ModStream(std::vector<char> &&rawModuleData)
     this->module = ibxm::module_load(&d, errors);
     this->replay = ibxm::new_replay(this->module, 44100, 0);
     //printf("%p IBXM Error: %s\n", this->module, errors);
-}
-
-void ModStream::Rewind2()
-{
-    printf("Rewind not supported\n");
 }
 
 void ModStream::SetPlaybackSpeed(double f)

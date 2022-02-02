@@ -12,16 +12,28 @@ static std::vector<cmixer::WavStream> soundBank;
 MBoolean                   soundOn = true;
 float playerStereoSeparation = 1.0;
 
-void InitSound( void )
+void InitSound()
 {
     cmixer::InitWithSDL();
     
     for (int index=0; index<kNumSounds; index++)
     {
-        soundBank.emplace_back(cmixer::LoadWAVFromFile(QuickResourceName("snd", index+128, ".wav")));
+        const char* path = QuickResourceName("snd", index+128, ".wav");
+        if (!FileExists(path))
+        {
+            Error(path);
+        }
+
+        soundBank.emplace_back();
+        soundBank.back().InitFromWAVFile(path) ;
     }
 }
 
+void ShutdownSound()
+{
+    soundBank.clear();
+    cmixer::ShutdownWithSDL();
+}
 
 void PlayMono( short which )
 {
@@ -37,7 +49,7 @@ void PlayStereoFrequency( short player, short which, short freq )
 {
     if (soundOn)
     {
-        auto& effect = soundBank[which];
+        auto& effect = soundBank.at(which);
         
         double pan;
         switch (player) {

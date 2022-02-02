@@ -382,7 +382,10 @@ int main(int, char *[])
 	
 	SavePrefs( );
 	ReleaseMonitor( );
-	
+
+    ShutdownMusic( );
+    ShutdownSound( );
+
 	return 0;
 }
 
