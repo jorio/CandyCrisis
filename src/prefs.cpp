@@ -41,7 +41,8 @@ Preference prefList[] =
     { PREF_NAME("SoundOn"),        &soundOn,     sizeof(MBoolean  ) },
     { PREF_NAME("KeyBindings"),    playerKeys,   sizeof(playerKeys) },
     { PREF_NAME("HighScores"),     scores,       sizeof(scores    ) },
-    { PREF_NAME("BestCombo"),      &best,        sizeof(best      ) }
+    { PREF_NAME("BestCombo"),      &best,        sizeof(best      ) },
+    { PREF_NAME("Fullscreen"),     &fullscreen,  sizeof(fullscreen) },
 };
 
 #if !__APPLE__ && !_WIN32

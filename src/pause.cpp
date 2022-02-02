@@ -515,10 +515,10 @@ enum
 	kNothing = -1,
 	
 // main pause screen (kEndGame is reused in continue and register)
-	kMusic = 0,		kEndGame,
-	kSound,         kControls,
-	kResume,        kSecret,
-	kWarp,
+	kMusic = 0,		kResume,
+	kSound,         kEndGame,
+	kFullscreen,    kControls,
+	kWarp,          kSecret,
 
 // continue screen
     kContinue,      
@@ -719,17 +719,18 @@ static void DrawPauseContents( int *item, int shade )
 {
 	MPoint dPoint;
 	int index;
-	const char *line[]  = { "\x01 Music",           "\x03 End Game",
-                            "\x01 Sound",           "\x03 Controls",
-                            "\x03 Resume"
+	const char *line[]  = { "\x01 Music",           "\x03 Resume",
+                            "\x01 Sound",           "\x03 End Game",
+                            "\x01 Fullscreen",      "\x03 Controls"
 	};
 
     const int itemCount = arrsize(line);
 	
-	if( level == kTutorialLevel ) line[1] = "\x03 Skip Tutorial";
+	if( level == kTutorialLevel ) line[kEndGame] = "\x03 Skip Tutorial";
 	
-	if( !musicOn ) line[0] = "\x02 Music";
-	if( !soundOn ) line[2] = "\x02 Sound";
+	if( !musicOn ) line[kMusic] = "\x02 Music";
+	if( !soundOn ) line[kSound] = "\x02 Sound";
+	if( !fullscreen ) line[kFullscreen] = "\x02 Fullscreen";
 
 	SDLU_AcquireSurface( drawSurface );	
 	
@@ -891,14 +892,14 @@ static MBoolean PauseSelected( int *item, unsigned char inKey, SDL_Keycode inSDL
 	
 	MRect targetRect[] = 
 	{	
-		{ 240, 180, 260, 320 },
-		{ 240, 340, 260, 480 },
-		{ 270, 180, 290, 320 },
-		{ 270, 340, 290, 480 },
-		{ 300, 180, 320, 320 },
-		{ 300, 340, 320, 480 },
-		{ 330, 180, 350, 320 },
-	    { 120, 550, 130, 560 }
+		{ 240, 180, 260, 320 },  // music
+		{ 240, 340, 260, 480 },  // resume
+		{ 270, 180, 290, 320 },  // sound
+		{ 270, 340, 290, 480 },  // end game
+		{ 300, 180, 320, 320 },  // fullscreen
+		{ 300, 340, 320, 480 },  // controls
+		{ 330, 180, 350, 320 },  // warp
+	    { 330, 340, 350, 480 },  // secret
 	};
 
 	static MBoolean lastDown = false;
@@ -934,12 +935,30 @@ static MBoolean PauseSelected( int *item, unsigned char inKey, SDL_Keycode inSDL
 			
 			switch( *item )
 			{
-				case kSound:     PlayMono( kClick ); soundOn = !soundOn; PlayMono( kClick );     return false;
-				case kMusic:     PlayMono( kClick ); musicOn = !musicOn; EnableMusic( musicOn ); return false;
-				case kEndGame:   PlayMono( kClick );                                             return true;
-				case kResume:    PlayMono( kClick );                                             return true;
-				case kControls:  PlayMono( kClick );                                             return true;
-				
+				case kSound:
+                    PlayMono( kClick );
+                    soundOn = !soundOn;
+                    PlayMono( kClick );
+                    return false;
+
+				case kMusic:
+                    PlayMono( kClick );
+                    musicOn = !musicOn;
+                    EnableMusic( musicOn );
+                    return false;
+
+				case kFullscreen:
+                    fullscreen = !fullscreen;
+                    SetFullscreen( fullscreen );
+                    PlayMono( kClick );
+                    return false;
+
+                case kEndGame:
+				case kResume:
+                case kControls:
+                    PlayMono( kClick );
+                    return true;
+
 				case kSecret:
 					if( ControlKeyIsPressed( ) )
 					{
