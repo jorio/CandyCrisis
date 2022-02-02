@@ -626,18 +626,7 @@ const char* QuickResourceName( const char* prefix, int id, const char* extension
 void Initialize(void)
 {
 #if _WIN32
-    HMODULE module;
-	char    name[MAX_PATH + 1], *lastBackslash;
-
-	module = GetModuleHandle(NULL);
-	GetModuleFileName(module, name, MAX_PATH);
-	lastBackslash = strrchr(name, '\\');
-	if (lastBackslash != NULL)
-    {
-        *lastBackslash = '\0';
-		strcpy(candyCrisisResources, name);
-		strcat(candyCrisisResources, "\\CandyCrisisResources\\");
-    }
+    strcpy(candyCrisisResources, "CandyCrisisResources\\");
 #endif
 #if __APPLE__
     sprintf(candyCrisisResources, "%s/", [[[NSBundle mainBundle] resourcePath] UTF8String]);

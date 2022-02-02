@@ -6,19 +6,3 @@
 
 #include <SDL.h>
 #include <SDL_endian.h>
-
-#if _WIN32
-
-#define _CRT_SECURE_NO_WARNINGS 1
-
-#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
-// Windows Header Files:
-#include <windows.h>
-
-// C RunTime Header Files
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-
-#endif
