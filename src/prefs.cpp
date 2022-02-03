@@ -60,7 +60,7 @@ void LoadPrefs()
     for (Preference& pref: prefList)
     {
         stream.seekg(0, std::ios::beg);
-        while (!stream.eof())
+        while (stream.good() && !stream.eof())
         {
             int keyLength;
             char key[256];
