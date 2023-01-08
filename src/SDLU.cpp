@@ -367,11 +367,13 @@ MBoolean SDLU_CheckSDLTyping(SDL_Keycode* sdlKey)
 
 static MPoint SDLUi_TranslatePointFromWindowToFrontSurface(MPoint pt)
 {
-    int windowWidth, windowHeight;
-    SDL_GetWindowSize(g_window, &windowWidth, &windowHeight);
-    
-    pt.h = pt.h * g_frontSurface->w / windowWidth;
-    pt.v = pt.v * g_frontSurface->h / windowHeight;
+    SDL_Rect viewport;
+    float scaleX, scaleY;
+    SDL_RenderGetViewport(g_renderer, &viewport);
+    SDL_RenderGetScale(g_renderer, &scaleX, &scaleY);
+
+    pt.h = pt.h / scaleX - viewport.x;
+    pt.v = pt.v / scaleY - viewport.y;
 
     return pt;
 }
