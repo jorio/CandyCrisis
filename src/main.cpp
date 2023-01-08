@@ -560,7 +560,7 @@ void CenterRectOnScreen( MRect *rect, double locationX, double locationY )
 
 void ReserveMonitor( void )
 {
-	SDL_ShowCursor( SDL_DISABLE );
+//	SDL_ShowCursor( SDL_DISABLE );
 	
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, crispUpscaling? "0": "best");

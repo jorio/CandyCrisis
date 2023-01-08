@@ -462,6 +462,7 @@ static MBoolean DrawDialogBox( MBoolean larger, int animationType, int *target, 
 	return animationStageComplete;
 }
 
+#if USE_CURSOR_SPRITE
 static void DrawDialogCursor( MRect *pauseRect, int *shade )
 {
 	MPoint p, q;
@@ -482,6 +483,7 @@ static void DrawDialogCursor( MRect *pauseRect, int *shade )
 	
 	SDLU_ReleaseSurface( drawSurface );
 }
+#endif
 
 static void DrawDialogLogo( MRect *pauseRect, int shade )
 {
@@ -1051,6 +1053,10 @@ void HandleDialog( int type )
 	lastPauseRect.bottom = lastPauseRect.right = -9999;
 
 	SDLU_StartWatchingTyping();
+
+#if !USE_CURSOR_SPRITE
+	SDL_ShowCursor( 1 );
+#endif
 	
 	DoFullRepaint = ItsTimeToRedraw;
 
@@ -1076,6 +1082,10 @@ void HandleDialog( int type )
 			
 			if( DialogSelected[dialogType]( &dialogItem, inASCII, inSDLKey ) )
 			{
+#if !USE_CURSOR_SPRITE
+				SDL_ShowCursor( 0 );
+#endif
+
 				dialogStage = kClosing; 
 				dialogTarget = 0;
 			}
@@ -1121,9 +1131,11 @@ void HandleDialog( int type )
 			
 			// ... and animation is complete so add content			
 			DialogDraw[dialogType]( &dialogItem, dialogShade );
-			
+
+#if USE_CURSOR_SPRITE
 			// ... and cursor
 			DrawDialogCursor( &pauseRect, &dialogShade );
+#endif
 		}
 
 		SurfaceCurveEdges( drawSurface, &pauseRect );

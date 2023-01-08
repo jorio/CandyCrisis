@@ -84,6 +84,7 @@ const int kCursorHeight = 32;
 
 extern MBoolean useNewTitle;
 
+#if USE_CURSOR_SPRITE
 static void InsertCursor( MPoint mouseHere, SDL_Surface* scratch, SDL_Surface* surface )
 {
 	SkittlesFontPtr cursorFont = GetFont( picFont );
@@ -114,6 +115,7 @@ static void RemoveCursor( MPoint mouseHere, SDL_Surface* scratch, SDL_Surface* s
 	SDLU_BlitSurface( scratch, &cursorBackSDLRect,
 	                  surface, &cursorFrontSDLRect );
 }
+#endif
 
 static void GameStartMenuRepaint()
 {
@@ -126,7 +128,9 @@ void GameStartMenu( void )
 	// multiple times in a row, thanks to "redo". Put initializations after redo.
     SDL_Surface*    gameStartSurface;
     SDL_Surface*    gameStartDrawSurface;
+#if USE_CURSOR_SPRITE
     SDL_Surface*    cursorBackSurface;
+#endif
 	SDL_Rect        backdropSDLRect = { 0, 0, 640, 480 };
 	SDL_Rect        cursorBackSDLRect = { 0, 0, kCursorWidth, kCursorHeight };
 	SDL_Rect        destSDLRect;
@@ -181,8 +185,12 @@ redo:
 	black = SDL_MapRGB( gameStartSurface->format, 0, 0, 0 );
 
 	// make cursor backing store
+#if USE_CURSOR_SPRITE
 	cursorBackSurface    = SDLU_InitSurface( &cursorBackSDLRect, 32 );
 	SDL_FillRect( cursorBackSurface, &cursorBackSDLRect, black );
+#else
+	SDL_ShowCursor( 1 );
+#endif
 	
 	// make drawing surface
 	gameStartDrawSurface = SDLU_InitSurface( &backdropSDLRect, 32 );
@@ -279,11 +287,13 @@ redo:
 		SDLU_AcquireSurface( gameStartDrawSurface );
 	
 		// Take the cursor out of the scene
+#if USE_CURSOR_SPRITE
 		RemoveCursor( mouse, cursorBackSurface, gameStartDrawSurface );
 		drawRect[kCursor].top    = mouse.v;
 		drawRect[kCursor].left   = mouse.h;
 		drawRect[kCursor].bottom = mouse.v + kCursorHeight;
 		drawRect[kCursor].right  = mouse.h + kCursorWidth;
+#endif
 		
 		// Inverted rectangles mean "nothing to do."
 		drawRect[kLeftSide].top    = drawRect[kRightSide].top    = drawRect[kGlow].top    = 
@@ -486,11 +496,13 @@ redo:
 		}
 
 		// Reinsert the cursor into the scene
+#if USE_CURSOR_SPRITE
 		InsertCursor( mouse, cursorBackSurface, gameStartDrawSurface );
 		drawRect[kCursor].top    = min<short>( drawRect[kCursor].top,    mouse.v );
 		drawRect[kCursor].left   = min<short>( drawRect[kCursor].left,   mouse.h );
 		drawRect[kCursor].bottom = max<short>( drawRect[kCursor].bottom, mouse.v + kCursorHeight );
 		drawRect[kCursor].right  = max<short>( drawRect[kCursor].right,  mouse.h + kCursorWidth );
+#endif
 
 		// Copy down everything		
 		if( shouldFullRepaint )
@@ -534,6 +546,12 @@ redo:
 	{
 		selected = kTitleItemQuit;
 	}
+	else
+	{
+#if !USE_CURSOR_SPRITE
+		SDL_ShowCursor( 0 );
+#endif
+	}
 	
 	switch( selected )
 	{
@@ -547,7 +565,9 @@ redo:
 
 	SDL_FreeSurface( gameStartSurface );
 	SDL_FreeSurface( gameStartDrawSurface );
+#if USE_CURSOR_SPRITE
 	SDL_FreeSurface( cursorBackSurface );
+#endif
 	
 	QuickFadeOut( NULL );
 
