@@ -44,6 +44,30 @@ using namespace cmixer;
 
 #define BUFFER_MASK (BUFFER_SIZE - 1)
 
+static inline int16_t UnpackI16BE(const void* data)
+{
+#if __BIG_ENDIAN__
+	// no-op on big-endian systems
+	return *(const uint16_t*) data;
+#else
+	const uint8_t* p = (uint8_t*) data;
+	return	( p[0] << 8 )
+		|	( p[1]      );
+#endif
+}
+
+static inline int16_t UnpackI16LE(const void* data)
+{
+#if __BIG_ENDIAN__
+	const uint8_t* p = (uint8_t*) data;
+	return	( p[0]      )
+		|	( p[1] << 8 );
+#else
+	// no-op on little-endian systems
+	return *(const uint16_t*) data;
+#endif
+}
+
 //-----------------------------------------------------------------------------
 // Global mixer
 
@@ -86,11 +110,12 @@ void cmixer::InitWithSDL()
 	// Init SDL audio
 	SDL_AudioSpec fmt = {};
 	fmt.freq = 44100;
-	fmt.format = AUDIO_S16;
+	fmt.format = AUDIO_S16SYS;
 	fmt.channels = 2;
 	fmt.samples = 1024;
 	fmt.callback = [](void* udata, Uint8* stream, int size)
 	{
+		(void) udata;
 		gMixer.Process((int16_t*) stream, size / 2);
 	};
 
@@ -161,7 +186,7 @@ void Mixer::SetMasterGain(double newGain)
 {
 	if (newGain < 0)
 		newGain = 0;
-	gain = FX_FROM_FLOAT(newGain);
+	gain = (int) FX_FROM_FLOAT(newGain);
 }
 
 void Mixer::Process(int16_t* dst, int len)
@@ -245,6 +270,7 @@ void Source::Init(int theSampleRate, int theLength)
 {
 	this->samplerate = theSampleRate;
 	this->length = theLength;
+	this->sustainOffset = 0;
 	SetGain(1);
 	SetPan(0);
 	SetPitch(1);
@@ -252,14 +278,27 @@ void Source::Init(int theSampleRate, int theLength)
 	Stop();
 }
 
-Source::~Source()
+void Source::RemoveFromMixer()
 {
 	gMixer.Lock();
 	if (active)
 	{
 		gMixer.sources.remove(this);
+		active = false;
 	}
 	gMixer.Unlock();
+}
+
+Source::~Source()
+{
+	if (active)
+	{
+		// You MUST call RemoveFromMixer before destroying a source. If you get here, your program is incorrect.
+		fprintf(stderr, "Source wasn't removed from mixer prior to destruction!\n");
+#if _DEBUG
+		std::terminate();
+#endif
+	}
 }
 
 void Source::Rewind()
@@ -395,8 +434,8 @@ void Source::RecalcGains()
 {
 	double l = this->gain * (pan <= 0. ? 1. : 1. - pan);
 	double r = this->gain * (pan >= 0. ? 1. : 1. + pan);
-	this->lgain = FX_FROM_FLOAT(l);
-	this->rgain = FX_FROM_FLOAT(r);
+	this->lgain = (int) FX_FROM_FLOAT(l);
+	this->rgain = (int) FX_FROM_FLOAT(r);
 }
 
 void Source::SetGain(double newGain)
@@ -422,7 +461,7 @@ void Source::SetPitch(double newPitch)
 	{
 		newRate = 0.001;
 	}
-	rate = FX_FROM_FLOAT(newRate);
+	rate = (int) FX_FROM_FLOAT(newRate);
 }
 
 void Source::SetLoop(bool newLoop)
@@ -437,6 +476,13 @@ void Source::SetInterpolation(bool newInterpolation)
 
 void Source::Play()
 {
+	if (length == 0)
+	{
+		// Don't attempt to play an empty source as this would result
+		// in instant starvation when filling mixer buffer
+		return;
+	}
+
 	gMixer.Lock();
 	state = CM_STATE_PLAYING;
 	if (!active)
@@ -488,7 +534,43 @@ void WavStream::ClearImplementation()
 	bitdepth = 0;
 	channels = 0;
 	idx = 0;
+
+#if __BIG_ENDIAN__		// default to native endianness
+	bigEndian = true;
+#else
+	bigEndian = false;
+#endif
+
 	userBuffer.clear();
+}
+
+void WavStream::Init(
+	int theSampleRate,
+	int theBitDepth,
+	int theNChannels,
+	bool theBigEndian,
+	std::span<char> theSpan)
+{
+	Clear();
+	Source::Init(theSampleRate, int((theSpan.size() / (theBitDepth / 8)) / theNChannels));
+	this->bitdepth = theBitDepth;
+	this->channels = theNChannels;
+	this->idx = 0;
+	this->span = theSpan;
+	this->bigEndian = theBigEndian;
+}
+
+std::span<char> WavStream::GetBuffer(int nBytesOut)
+{
+	userBuffer.clear();
+	userBuffer.reserve(nBytesOut);
+	return std::span(userBuffer.data(), nBytesOut);
+}
+
+std::span<char> WavStream::SetBuffer(std::vector<char>&& data)
+{
+	userBuffer = std::move(data);
+	return std::span(userBuffer.data(), userBuffer.size());
 }
 
 void WavStream::RewindImplementation()
@@ -496,28 +578,44 @@ void WavStream::RewindImplementation()
 	idx = 0;
 }
 
-void WavStream::FillBuffer(int16_t* dst, int len)
+void WavStream::FillBuffer(int16_t* dst, int fillLength)
 {
 	int x, n;
 
-	len /= 2;
+	fillLength /= 2;
 
-	while (len > 0)
+	while (fillLength > 0)
 	{
-		n = MIN(len, length - idx);
-		len -= n;
-        if (bitdepth == 16 && channels == 1)
+		n = MIN(fillLength, length - idx);
+
+		fillLength -= n;
+
+		if (bigEndian && bitdepth == 16 && channels == 1)
 		{
 			WAV_PROCESS_LOOP({
-				dst[0] = dst[1] = data16()[idx];
+				dst[0] = dst[1] = UnpackI16BE(&data16()[idx]);
+			});
+		}
+		else if (bigEndian && bitdepth == 16 && channels == 2)
+		{
+			WAV_PROCESS_LOOP({
+				x = idx * 2;
+				dst[0] = UnpackI16BE(&data16()[x]);
+				dst[1] = UnpackI16BE(&data16()[x + 1]);
+			});
+		}
+		else if (bitdepth == 16 && channels == 1)
+		{
+			WAV_PROCESS_LOOP({
+				dst[0] = dst[1] = UnpackI16LE(&data16()[idx]);
 			});
 		}
 		else if (bitdepth == 16 && channels == 2)
 		{
 			WAV_PROCESS_LOOP({
 				x = idx * 2;
-				dst[0] = data16()[x];
-				dst[1] = data16()[x + 1];
+				dst[0] = UnpackI16LE(&data16()[x]);
+				dst[1] = UnpackI16LE(&data16()[x + 1]);
 			});
 		}
 		else if (bitdepth == 8 && channels == 1)
@@ -535,15 +633,15 @@ void WavStream::FillBuffer(int16_t* dst, int len)
 			});
 		}
 		// Loop back and continue filling buffer if we didn't fill the buffer
-		if (len > 0)
+		if (fillLength > 0)
 		{
-			idx = 0;
+			idx = sustainOffset;
 		}
 	}
 }
 
 //-----------------------------------------------------------------------------
-// LoadWAVFromFile for testing
+// LoadWAVFromFile
 
 static std::vector<char> LoadFile(char const* filename)
 {
@@ -570,7 +668,7 @@ next:
 	return p + 8;
 }
 
-void cmixer::WavStream::InitFromWAVFile(const char* path)
+WavStream cmixer::LoadWAVFromFile(const char* path)
 {
 	int sz;
 	auto filebuf = LoadFile(path);
@@ -581,7 +679,7 @@ void cmixer::WavStream::InitFromWAVFile(const char* path)
 	// Check header
 	if (memcmp(p, "RIFF", 4) || memcmp(p + 8, "WAVE", 4))
 		throw std::invalid_argument("bad wav header");
-	
+
 	// Find fmt subchunk
 	p = FindChunk(data, len, "fmt ", &sz);
 	if (!p)
@@ -602,15 +700,12 @@ void cmixer::WavStream::InitFromWAVFile(const char* path)
 	if (!p)
 		throw std::invalid_argument("no data subchunk");
 
-    Clear();
-    Init(samplerate, sz / (channels * bitdepth / 8));
-
-    this->bitdepth = bitdepth;
-    this->channels = channels;
-    this->idx = 0;
-	this->interpolate = true;
-
-    userBuffer.reserve(sz);
-    for (int i = 0; i < sz; i++)
-        userBuffer.push_back(p[i]);
+	WavStream wavStream;
+	wavStream.Init(
+		samplerate,
+		bitdepth,
+		channels,
+		false,
+		wavStream.SetBuffer(std::vector<char>(p, p + sz)));
+	return wavStream;
 }

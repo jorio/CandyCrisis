@@ -7,9 +7,11 @@
 #include "support/cmixer.h"
 #include <stdio.h>
 
-static std::vector<cmixer::WavStream> soundBank;
-MBoolean                   soundOn = true;
-float playerStereoSeparation = 1.0;
+MBoolean soundOn = true;
+
+static std::vector<cmixer::WavStream> s_soundBank;
+static constexpr float k_playerStereoSeparation = 0.5f;
+static constexpr float k_soundEffectGain = 0.7f;
 
 void InitSound()
 {
@@ -23,14 +25,18 @@ void InitSound()
             Error(path);
         }
 
-        soundBank.emplace_back();
-        soundBank.back().InitFromWAVFile(path) ;
+        s_soundBank.emplace_back(cmixer::LoadWAVFromFile(path));
+        s_soundBank.back().SetInterpolation(true);
     }
 }
 
 void ShutdownSound()
 {
-    soundBank.clear();
+    for (auto& wavStream : s_soundBank)
+    {
+        wavStream.RemoveFromMixer();
+    }
+    s_soundBank.clear();
     cmixer::ShutdownWithSDL();
 }
 
@@ -48,19 +54,22 @@ void PlayStereoFrequency( short player, short which, short freq )
 {
     if (soundOn)
     {
-        auto& effect = soundBank.at(which);
-        
+        auto& effect = s_soundBank.at(which);
+
         double pan;
-        switch (player) {
-            case 0: pan = -playerStereoSeparation; break;
-            case 1: pan = +playerStereoSeparation; break;
+        switch (player)
+        {
+            case 0: pan = -k_playerStereoSeparation; break;
+            case 1: pan = +k_playerStereoSeparation; break;
             default: pan = 0.0; break;
         }
-        
+
+        effect.Stop();
+        effect.SetGain(k_soundEffectGain);
         effect.SetPan(pan);
         effect.SetPitch(1.0 + freq/16.0);
         effect.Play();
-        
+
         UpdateSound();
     }
 }

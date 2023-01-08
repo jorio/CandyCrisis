@@ -30,7 +30,4 @@ enum
 	kNumSounds
 };
 
-namespace FMOD { class System; }
-
 extern MBoolean         soundOn;
-extern FMOD::System    *g_fmod;

@@ -80,11 +80,8 @@ static std::vector<char> LoadFile(char const* filename)
 
 void ChooseMusic( short which )
 {
-    if (s_musicChannel != NULL)
-    {
-        delete s_musicChannel;
-        s_musicChannel = NULL;
-    }
+    // Kill existing song first, if any
+    ShutdownMusic();
 
     musicSelection = -1;
     
@@ -115,6 +112,7 @@ void ShutdownMusic()
 {
     if (s_musicChannel)
     {
+        s_musicChannel->RemoveFromMixer();
         delete s_musicChannel;
         s_musicChannel = NULL;
     }

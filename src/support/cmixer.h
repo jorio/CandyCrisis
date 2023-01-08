@@ -27,6 +27,7 @@
 #include <vector>
 #include <functional>
 #include <cstdint>
+#include <span>
 
 #define BUFFER_SIZE (512)
 
@@ -45,6 +46,7 @@ namespace cmixer
 		int16_t pcmbuf[BUFFER_SIZE];    // Internal buffer with raw stereo PCM
 		int samplerate;                 // Stream's native samplerate
 		int length;                     // Stream's length in frames
+		int sustainOffset;              // Offset of the sustain loop in frames
 		int end;                        // End index for the current play-through
 		int state;                      // Current state (playing|paused|stopped)
 		int64_t position;               // Current playhead position (fixed point)
@@ -74,6 +76,8 @@ namespace cmixer
 
 	public:
 		virtual ~Source();
+
+		void RemoveFromMixer();
 
 		void Clear();
 
@@ -114,7 +118,9 @@ namespace cmixer
 	{
 		int bitdepth;
 		int channels;
+		bool bigEndian;
 		int idx;
+		std::span<char> span;
 		std::vector<char> userBuffer;
 
 		void ClearImplementation() override;
@@ -123,16 +129,28 @@ namespace cmixer
 
 		void FillBuffer(int16_t* buffer, int length) override;
 
-		inline const uint8_t* data8() const
-		{ return reinterpret_cast<const uint8_t*>(userBuffer.data()); }
+		inline uint8_t* data8() const
+		{ return reinterpret_cast<uint8_t*>(span.data()); }
 
-		inline const int16_t* data16() const
-		{ return reinterpret_cast<const int16_t*>(userBuffer.data()); }
+		inline int16_t* data16() const
+		{ return reinterpret_cast<int16_t*>(span.data()); }
 
 	public:
 		WavStream();
 
-        void InitFromWAVFile(const char* path);
+		WavStream(WavStream&&) = default;	// move constructor ensures span stays in sync with userBuffer!
+
+		void Init(
+			int theSampleRate,
+			int theBitDepth,
+			int nChannels,
+			bool bigEndian,
+			std::span<char> data
+		);
+
+		std::span<char> GetBuffer(int nBytesOut);
+
+		std::span<char> SetBuffer(std::vector<char>&& data);
 	};
 
 
