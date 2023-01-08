@@ -30,6 +30,9 @@ static MPoint       s_mousePosition;
 // for event loop
 static MBoolean     s_isForeground = true;
 
+// for fade out / fade in
+static float        s_fadeGamma = 1;
+ 
 // for checktyping
 struct BufferedKey
 {
@@ -292,18 +295,7 @@ void SDLU_BlitFrontSurface( SDL_Surface* source, SDL_Rect* sourceSDLRect, SDL_Re
 
 void SDLU_SetBrightness( float b )
 {
-    if (!fullscreen)
-        return;
-
-	Uint16 table[256];
-	int    index;
-	
-	for( index=0; index<256; index++ )
-	{
-		table[index] = (int)(index * b * 257.0f); // 255 * 257 = 65535
-	}
-	
-	SDL_SetWindowGammaRamp(g_window, table, table, table);
+    s_fadeGamma = b;
 }
 
 void SDLU_Yield()
@@ -428,10 +420,20 @@ void SDLU_ReleaseSurface( SDL_Surface* surface )
 
 void SDLU_Present()
 {
+    SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, 255);
+
     SDL_UpdateTexture(g_windowTexture, NULL, g_frontSurface->pixels, g_frontSurface->pitch);
     SDL_RenderClear(g_renderer);
     
     SDL_RenderCopy(g_renderer, g_windowTexture, widescreen ? &g_widescreenCrop : NULL, NULL);
+
+    if (s_fadeGamma < 1.0)
+    {
+        SDL_SetRenderDrawBlendMode(g_renderer, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, (Uint8)((1.0f - s_fadeGamma) * 255.0f));
+        SDL_RenderFillRect(g_renderer, NULL);
+    }
+
     SDL_RenderPresent(g_renderer);
 
 #if 0
@@ -445,7 +447,9 @@ void SDLU_Present()
     if (elapsed > k_fpsSampleInterval)
     {
         float fps = s_fpsAccumulator / (elapsed / 1000.0f);
+#if _DEBUG
         printf("FPS: %.1f\n", fps);
+#endif
         s_fpsAccumulator = 0;
         s_fpsSampleStart = now;
     }

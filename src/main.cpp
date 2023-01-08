@@ -663,19 +663,18 @@ void QuickFadeIn( MRGBColor *color )
 {
 	(void) color; // is unused
 
-	if (fullscreen) {
-        for( float percent=0.0f; percent<1.0f; percent += 0.04f )
+    for( float percent=0.0f; percent<1.0f; percent += 0.04f )
+    {
+        int c = MTickCount( );
+        SDLU_SetBrightness( percent );
+        while( c == MTickCount( ) )
         {
-            MTicks c = MTickCount( );
-            SDLU_SetBrightness( percent );
-            while( c == MTickCount( ) )
-            {
-                SDLU_Yield();
-            }
+            SDLU_Present();
+            SDLU_Yield();
         }
+    }
 
-        SDLU_SetBrightness( 1.0 );
-	}
+    SDLU_SetBrightness( 1.0 );
 
     SDL_Delay(200);
 }
@@ -684,19 +683,20 @@ void QuickFadeOut( MRGBColor *color )
 {
 	(void) color; // is unused
 
-	if (fullscreen) {
-        for( float percent=1.0f; percent>0.0f; percent -= 0.04f )
+    for( float percent=1.0f; percent>0.0f; percent -= 0.04f )
+    {
+        int c = MTickCount( );
+        SDLU_SetBrightness( percent );
+        while( c == MTickCount( ) )
         {
-            MTicks c = MTickCount( );
-            SDLU_SetBrightness( percent );
-            while( c == MTickCount( ) )
-            {
-                SDLU_Yield();
-            }
+            SDLU_Present();
+            SDLU_Yield();
         }
+    }
 
-        SDLU_SetBrightness( 0.0 );
-	}
+    SDLU_SetBrightness( 0.0 );
+    SDLU_Present();
+    SDLU_Present();
 
     SDL_Delay(200);
 }
