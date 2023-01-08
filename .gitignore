@@ -1,5 +1,7 @@
-build-*/
-cache/
-cmake-build-*/
-dist/
-extern/
+/build*
+/cache
+/cmake-build*
+/dist
+/extern
+
+.DS_Store

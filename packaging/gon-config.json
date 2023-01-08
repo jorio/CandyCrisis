@@ -1,7 +1,0 @@
-{
-    "notarize": [{
-        "path": "./dist/CandyCrisis-3.0.0-mac.dmg",
-        "bundle_id": "io.jor.candycrisis",
-        "staple": true
-    }]
-}
