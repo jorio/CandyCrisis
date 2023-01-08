@@ -122,22 +122,71 @@ int SDLUi_EventFilter(void*, SDL_Event *event)
             if (event->window.event == SDL_WINDOWEVENT_FOCUS_LOST && s_isForeground)
             {
                 FreezeGameTickCount();
-                EnableMusic(false);
+                //EnableMusic(false);
                 s_isForeground = false;
             }
             else if (event->window.event == SDL_WINDOWEVENT_FOCUS_GAINED && !s_isForeground)
             {
                 UnfreezeGameTickCount();
-                EnableMusic(musicOn);
+                //EnableMusic(musicOn);
                 s_isForeground = true;
                 
                 DoFullRepaint();
+            }
+            else if (event->window.event == SDL_WINDOWEVENT_RESIZED)
+            {
+                SDLU_CreateRendererTexture();
             }
             break;
         }
     }
     
     return 1;
+}
+
+
+void SDLU_CreateRendererTexture()
+{
+    if (!g_renderer)
+        return;
+
+    if (!crispUpscaling)
+    {
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
+        SDL_RenderSetIntegerScale(g_renderer, SDL_FALSE);
+    }
+    else
+    {
+        int minWidth = 640;
+        int minHeight = widescreen ? 360 : 480;
+
+        int currentWidth = 0;
+        int currentHeight = 0;
+#if SDL_VERSION_ATLEAST(2,26,0)
+        SDL_GetWindowSizeInPixels(g_window, &currentWidth, &currentHeight);
+#else
+        SDL_GetWindowSize(g_window, &currentWidth, &currentHeight);
+#endif
+
+        if (currentWidth < minWidth || currentHeight < minHeight)
+        {
+            SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
+            SDL_RenderSetIntegerScale(g_renderer, SDL_FALSE);
+        }
+        else
+        {
+            SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
+            SDL_RenderSetIntegerScale(g_renderer, SDL_TRUE);
+        }
+    }
+
+    if (g_windowTexture)
+        SDL_DestroyTexture(g_windowTexture);
+
+    g_windowTexture = SDL_CreateTexture(g_renderer,
+        SDL_PIXELFORMAT_RGB888,
+        SDL_TEXTUREACCESS_STREAMING,
+        640, 480);
 }
 
 

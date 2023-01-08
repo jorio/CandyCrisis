@@ -509,13 +509,14 @@ static void DrawDialogLogo( MRect *pauseRect, int shade )
 
 enum
 { 
+	kWarp = -2,
 	kNothing = -1,
 	
 // main pause screen (kEndGame is reused in continue and register)
 	kMusic = 0,		kResume,
 	kSound,         kEndGame,
 	kFullscreen,    kControls,
-	kWarp,          kSecret,
+	kScalingMode,   kSecret,
 
 // continue screen
     kContinue,      
@@ -718,7 +719,8 @@ static void DrawPauseContents( int *item, int shade )
 	int index;
 	const char *line[]  = { "\x01 Music",           "\x03 Resume",
                             "\x01 Sound",           "\x03 End Game",
-                            "\x01 Fullscreen",      "\x03 Controls"
+                            "\x01 Fullscreen",      "\x03 Controls",
+                            "\x01 Crisp Scaling",
 	};
 
     const int itemCount = arrsize(line);
@@ -728,6 +730,7 @@ static void DrawPauseContents( int *item, int shade )
 	if( !musicOn ) line[kMusic] = "\x02 Music";
 	if( !soundOn ) line[kSound] = "\x02 Sound";
 	if( !fullscreen ) line[kFullscreen] = "\x02 Fullscreen";
+	if (!crispUpscaling) line[kScalingMode] = "\x02 Crisp Scaling";
 
 	SDLU_AcquireSurface( drawSurface );	
 	
@@ -949,6 +952,12 @@ static MBoolean PauseSelected( int *item, unsigned char inKey, SDL_Keycode inSDL
                     SetFullscreen( fullscreen );
                     PlayMono( kClick );
                     return false;
+
+				case kScalingMode:
+					crispUpscaling = !crispUpscaling;
+					SDLU_CreateRendererTexture();
+					PlayMono(kClick);
+					return false;
 
                 case kEndGame:
 				case kResume:

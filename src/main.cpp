@@ -310,8 +310,7 @@ static char  candyCrisisResources[512];
 MBoolean fullscreen = false;
 MBoolean widescreen = false;
 MBoolean useNewTitle = widescreen;
-MBoolean crispUpscaling = false;
-int windowedScale = 2;
+MBoolean crispUpscaling = true;
 
 int main(int argc, char *argv[])
 {
@@ -563,14 +562,18 @@ void ReserveMonitor( void )
 //	SDL_ShowCursor( SDL_DISABLE );
 	
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, crispUpscaling? "0": "best");
     
     int resW = 640;
     int resH = widescreen? 360: 480;
 
-    SDL_CreateWindowAndRenderer(resW*windowedScale, resH*windowedScale, SDL_WINDOW_RESIZABLE, &g_window, &g_renderer);
+	SDL_Rect displayBounds = { .x = 0, .y = 0, .w = 640, .h = 480 };
+	SDL_GetDisplayUsableBounds(0, &displayBounds);
+	int scaleX = (displayBounds.w * 95/100) / resW;	// allow covering at most 95% of the screen
+	int scaleY = (displayBounds.h * 95/100) / resH;
+	int scale = scaleX < scaleY ? scaleX : scaleY;
+	scale = scale < 1 ? 1 : scale;
 
-    SDL_RenderSetIntegerScale(g_renderer, crispUpscaling ? SDL_TRUE : SDL_FALSE);
+    SDL_CreateWindowAndRenderer(resW* scale, resH* scale, SDL_WINDOW_RESIZABLE, &g_window, &g_renderer);
 
     SDL_RenderSetLogicalSize(g_renderer, resW, resH);
     SDL_SetWindowTitle(g_window, "Candy Crisis");
@@ -582,10 +585,7 @@ void ReserveMonitor( void )
     g_frontSurface = SDL_CreateRGBSurface(0, 640, 480, 32,
                                           RED_MASK, GREEN_MASK, BLUE_MASK, 0);
     
-    g_windowTexture = SDL_CreateTexture(g_renderer,
-                                        SDL_PIXELFORMAT_RGB888,
-                                        SDL_TEXTUREACCESS_STREAMING,
-                                        640, 480);
+	SDLU_CreateRendererTexture();
 
     SetFullscreen(fullscreen);
 }
