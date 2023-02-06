@@ -23,6 +23,10 @@
 #define BYTES_PER_MASK_PIXEL 1
 #define MASK_DEPTH 8
 
+#define SYSTEM_CURSOR_OFF       0
+#define SYSTEM_CURSOR_ARROW     1
+#define SYSTEM_CURSOR_HAND      2
+
 void         SDLU_Init();
 void         SDLU_CreateRendererTexture();
 SDL_Rect*    SDLU_MRectToSDLRect( const MRect* in, SDL_Rect* out );
@@ -46,3 +50,4 @@ MBoolean     SDLU_CheckASCIITyping(char* ascii);
 MBoolean     SDLU_CheckSDLTyping(SDL_Keycode* sdlKey);
 MBoolean     SDLU_IsForeground();
 void         SDLU_Present();
+void         SDLU_SetSystemCursor(int which);

@@ -559,8 +559,6 @@ void CenterRectOnScreen( MRect *rect, double locationX, double locationY )
 
 void ReserveMonitor( void )
 {
-//	SDL_ShowCursor( SDL_DISABLE );
-	
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
     
     int resW = 640;

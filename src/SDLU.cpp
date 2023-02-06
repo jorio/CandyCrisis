@@ -27,6 +27,10 @@ static SDL_Palette* s_grayscalePalette;
 static int          s_mouseButton;
 static MPoint       s_mousePosition;
 
+// system mouse cursors
+static SDL_Cursor*  s_standardCursor = NULL;
+static SDL_Cursor*  s_handCursor = NULL;
+
 // for event loop
 static MBoolean     s_isForeground = true;
 
@@ -206,6 +210,9 @@ void SDLU_Init()
     
     s_grayscalePalette = SDL_AllocPalette(256);
     SDL_SetPaletteColors(s_grayscalePalette, grayscaleColors, 0, arrsize(grayscaleColors));
+
+    s_standardCursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
+    s_handCursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
 }
 
 
@@ -503,6 +510,32 @@ void SDLU_Present()
 #endif
         s_fpsAccumulator = 0;
         s_fpsSampleStart = now;
+    }
+#endif
+}
+
+
+void SDLU_SetSystemCursor(int which)
+{
+#if USE_CURSOR_SPRITE
+    SDL_ShowCursor(SDL_DISABLE);
+#else
+    switch (which)
+    {
+        case SYSTEM_CURSOR_OFF:
+            SDL_ShowCursor(SDL_DISABLE);
+            SDL_SetCursor(s_standardCursor);
+            break;
+
+        case SYSTEM_CURSOR_ARROW:
+            SDL_SetCursor(s_standardCursor);
+            SDL_ShowCursor(SDL_ENABLE);
+            break;
+
+        case SYSTEM_CURSOR_HAND:
+            SDL_SetCursor(s_handCursor);
+            SDL_ShowCursor(SDL_ENABLE);
+            break;
     }
 #endif
 }

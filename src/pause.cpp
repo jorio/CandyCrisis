@@ -1063,10 +1063,6 @@ void HandleDialog( int type )
 
 	SDLU_StartWatchingTyping();
 
-#if !USE_CURSOR_SPRITE
-	SDL_ShowCursor( 1 );
-#endif
-	
 	DoFullRepaint = ItsTimeToRedraw;
 
 	while( ((dialogStage != kClosing) || !dialogStageComplete) && !finished )
@@ -1091,9 +1087,7 @@ void HandleDialog( int type )
 			
 			if( DialogSelected[dialogType]( &dialogItem, inASCII, inSDLKey ) )
 			{
-#if !USE_CURSOR_SPRITE
-				SDL_ShowCursor( 0 );
-#endif
+				SDLU_SetSystemCursor( SYSTEM_CURSOR_OFF );
 
 				dialogStage = kClosing; 
 				dialogTarget = 0;
@@ -1145,6 +1139,7 @@ void HandleDialog( int type )
 			// ... and cursor
 			DrawDialogCursor( &pauseRect, &dialogShade );
 #endif
+			SDLU_SetSystemCursor( dialogItem == kNothing ? SYSTEM_CURSOR_ARROW : SYSTEM_CURSOR_HAND );
 		}
 
 		SurfaceCurveEdges( drawSurface, &pauseRect );

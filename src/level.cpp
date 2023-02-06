@@ -188,8 +188,6 @@ redo:
 #if USE_CURSOR_SPRITE
 	cursorBackSurface    = SDLU_InitSurface( &cursorBackSDLRect, 32 );
 	SDL_FillRect( cursorBackSurface, &cursorBackSDLRect, black );
-#else
-	SDL_ShowCursor( 1 );
 #endif
 	
 	// make drawing surface
@@ -503,6 +501,7 @@ redo:
 		drawRect[kCursor].bottom = max<short>( drawRect[kCursor].bottom, mouse.v + kCursorHeight );
 		drawRect[kCursor].right  = max<short>( drawRect[kCursor].right,  mouse.h + kCursorWidth );
 #endif
+		SDLU_SetSystemCursor( selected < 0 ? SYSTEM_CURSOR_ARROW : SYSTEM_CURSOR_HAND );
 
 		// Copy down everything		
 		if( shouldFullRepaint )
@@ -548,9 +547,7 @@ redo:
 	}
 	else
 	{
-#if !USE_CURSOR_SPRITE
-		SDL_ShowCursor( 0 );
-#endif
+		SDLU_SetSystemCursor( SYSTEM_CURSOR_OFF );
 	}
 	
 	switch( selected )
