@@ -32,7 +32,7 @@ void OffsetMRect( MRect* r, int x, int y )
 }
 
 
-unsigned char MPointInMRect( MPoint p, MRect* r )
+unsigned char MPointInMRect( MPoint p, const MRect* r )
 {
 	return (p.h >= r->left) &&
 	       (p.h <  r->right) &&

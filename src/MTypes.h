@@ -41,5 +41,5 @@ struct MPoint
 
 void UnionMRect( const MRect* a, const MRect* b, MRect* u );
 void OffsetMRect( MRect* r, int x, int y );
-unsigned char MPointInMRect( MPoint p, MRect* r );
+unsigned char MPointInMRect( MPoint p, const MRect* r );
 

@@ -38,6 +38,12 @@ struct FRGBColor
 	float red, green, blue;
 };
 
+struct ClickableZone
+{
+	int item;
+	MRect rect;
+};
+
 SDL_Surface* backSurface;
 SDL_Surface* drawSurface;
 SDL_Surface* logoSurface;
@@ -509,14 +515,14 @@ static void DrawDialogLogo( MRect *pauseRect, int shade )
 
 enum
 { 
-	kWarp = -2,
 	kNothing = -1,
-	
+	kBack = -2,
+
 // main pause screen (kEndGame is reused in continue and register)
 	kMusic = 0,		kResume,
 	kSound,         kEndGame,
 	kFullscreen,    kControls,
-	kScalingMode,   kSecret,
+	kScalingMode,   kWarp,
 
 // continue screen
     kContinue,      
@@ -730,7 +736,7 @@ static void DrawPauseContents( int *item, int shade )
 	if( !musicOn ) line[kMusic] = "\x02 Music";
 	if( !soundOn ) line[kSound] = "\x02 Sound";
 	if( !fullscreen ) line[kFullscreen] = "\x02 Fullscreen";
-	if (!crispUpscaling) line[kScalingMode] = "\x02 Crisp Scaling";
+	if( !crispUpscaling ) line[kScalingMode] = "\x02 Crisp Scaling";
 
 	SDLU_AcquireSurface( drawSurface );	
 	
@@ -746,10 +752,39 @@ static void DrawPauseContents( int *item, int shade )
 }
 
 
+static MBoolean GetClickedZone( int* item, SDL_Keycode inSDLKey, int numZones, const ClickableZone* zones )
+{
+	if( inSDLKey == SDLK_ESCAPE )
+	{
+		*item = kBack;
+		return true;
+	}
+
+	MPoint p;
+	SDLU_GetMouse(&p);
+
+	int trigger = SDLU_Button();
+
+	*item = kNothing;
+	for( int i = 0; i < numZones; i++ )
+	{
+		if( MPointInMRect( p, &zones[i].rect ) )
+		{
+			*item = zones[i].item;
+		}
+	}
+
+	return trigger;
+}
+
+
 static MBoolean ContinueSelected( int *item, unsigned char inKey, SDL_Keycode inSDLKey )
 {
-	MRect yes = {280, 220, 300, 260}, no = {280, 400, 300, 440};
-	MPoint p;
+	static const ClickableZone zones[] =
+	{
+		{ kContinue,	{280, 220, 300, 260} },
+		{ kEndGame,		{280, 400, 300, 440} },
+	};
 	
 	(void) inSDLKey; // is unused
 	
@@ -758,20 +793,13 @@ static MBoolean ContinueSelected( int *item, unsigned char inKey, SDL_Keycode in
 		*item = kEndGame;
 		return true;
 	}
-	
-	if( inSDLKey == SDLK_ESCAPE )
-	{
-		*item = kContinue;
-		return true;
-	}
-	
-	SDLU_GetMouse( &p );
 
-	     if( MPointInMRect( p, &yes ) ) *item = kContinue;	
-	else if( MPointInMRect( p, &no  ) ) *item = kEndGame;
-	else *item = kNothing;
+	int trigger = GetClickedZone( item, inSDLKey, arrsize(zones), zones );
+
+	if (trigger && *item == kBack)
+		*item = kContinue;
 	
-	return( SDLU_Button( ) && (*item != kNothing) );
+	return trigger && *item != kNothing;
 }
 
 static MBoolean HiScoreSelected( int *item, unsigned char inKey, SDL_Keycode inSDLKey )
@@ -823,38 +851,45 @@ static MBoolean ControlsSelected( int *item, unsigned char inKey, SDL_Keycode in
 	int             index;
 	static MBoolean lastDown = false;
 	MBoolean        down;
-	MRect           okRect = { 340, 200, 360, 255 };
-	MRect           resetRect = { 340, 365, 360, 450 };
 	int             returnValue = 0;
+
+	static const ClickableZone buttonZones[] =
+	{
+		{ kControlsOK,		{ 340, 200, 360, 255 } },
+		{ kControlsReset,	{ 340, 365, 360, 450 } },
+	};
 	
 	(void) inKey; // unused
 	
 	*item = kNothing;
 
-	down = SDLU_Button();
-	SDLU_GetMouse( &p );
 
-	if( MPointInMRect( p, &okRect ) )
+	down = GetClickedZone( item, inSDLKey, arrsize(buttonZones), buttonZones );
+
+	if ( down && *item != kNothing )
 	{
-		*item = kControlsOK;
-		if( down )
+		if (!lastDown)
 		{
-			PlayMono( kClick );
-			returnValue = 1;
-			controlToReplace = -1;
-		}
-	}
-	else if( MPointInMRect( p, &resetRect ) )
-	{
-		*item = kControlsReset;
-		if( down && !lastDown )
-		{
-			PlayMono( kClick );
-			memcpy( playerKeys, defaultPlayerKeys, sizeof(playerKeys) );
+			switch (*item)
+			{
+				case kBack:
+				case kControlsOK:
+					PlayMono(kClick);
+					returnValue = 1;
+					controlToReplace = -1;
+					break;
+
+				case kControlsReset:
+					PlayMono(kClick);
+					memcpy(playerKeys, defaultPlayerKeys, sizeof(playerKeys));
+					break;
+			}
 		}
 	}
 	else
 	{
+		SDLU_GetMouse(&p);
+
 		for( index=0; index<8; index++ )
 		{
 			dRect.top    = 229 + ((index & ~1) * 13);
@@ -890,42 +925,17 @@ static MBoolean PauseSelected( int *item, unsigned char inKey, SDL_Keycode inSDL
 {
 	(void) inSDLKey; // is unused
 	
-	MRect targetRect[] = 
+	static const ClickableZone zones[] = 
 	{	
-		{ 240, 180, 260, 320 },  // music
-		{ 240, 340, 260, 480 },  // resume
-		{ 270, 180, 290, 320 },  // sound
-		{ 270, 340, 290, 480 },  // end game
-		{ 300, 180, 320, 320 },  // fullscreen
-		{ 300, 340, 320, 480 },  // controls
-		{ 330, 180, 350, 320 },  // warp
-	    { 330, 340, 350, 480 },  // secret
+		{ kMusic,		{ 240, 180, 260, 320 } },		{ kResume,		{ 240, 340, 260, 480 } },
+		{ kSound,		{ 270, 180, 290, 320 } },		{ kEndGame,		{ 270, 340, 290, 480 } },
+		{ kFullscreen,	{ 300, 180, 320, 320 } },		{ kControls,	{ 300, 340, 320, 480 } },
+		{ kScalingMode,	{ 330, 180, 350, 320 } },		{ kWarp,		{ 330, 340, 350, 480 } },
 	};
 
 	static MBoolean lastDown = false;
-	int trigger;
-	int index;
-	MPoint p;
 	
-	SDLU_GetMouse( &p );
-	
-	trigger = SDLU_Button();
-	if( inSDLKey == SDLK_ESCAPE )
-	{
-		*item = kResume;
-		trigger = true;
-	}
-	else
-	{
-		*item = kNothing;
-		for( index=0; index<arrsize(targetRect); index++ )
-		{
-			if( MPointInMRect( p, &targetRect[index] ) )
-			{
-				*item = index;
-			}
-		}
-	}
+	int trigger = GetClickedZone( item, inSDLKey, arrsize(zones), zones );
 	
 	if( trigger )
 	{
@@ -961,21 +971,21 @@ static MBoolean PauseSelected( int *item, unsigned char inKey, SDL_Keycode inSDL
 
                 case kEndGame:
 				case kResume:
+				case kBack:
                 case kControls:
                     PlayMono( kClick );
                     return true;
 
-				case kSecret:
+				case kWarp:
 					if( ControlKeyIsPressed( ) )
 					{
-						*item = kWarp;
-						level = Warp( );
+						PlayMono(kLevelUp);
+						level++; //Warp( );
 						return true;
 					}
-					else if( OptionKeyIsPressed( ) )
+					else
 					{
-						//SoundTest( );
-						ItsTimeToRedraw();
+						*item = kNothing;
 					}
 					return false;
 			}
@@ -1096,10 +1106,10 @@ void HandleDialog( int type )
 
 		// Do animation ...
 		{
-			const MBoolean dialogIsLarge[kNumDialogs] = { false, false, false, true };
+			MBoolean dialogIsLarge = dialogType == kControlsDialog;
 
 			pauseRect = lastPauseRect;
-			dialogStageComplete = DrawDialogBox( dialogIsLarge[dialogType], dialogStage, &dialogTarget, skip, &colorWrap, colorInc, &pauseRect );
+			dialogStageComplete = DrawDialogBox( dialogIsLarge, dialogStage, &dialogTarget, skip, &colorWrap, colorInc, &pauseRect );
 			SurfaceGetEdges( backSurface, &pauseRect );
 		}
 
