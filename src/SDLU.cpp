@@ -423,6 +423,29 @@ MBoolean SDLU_CheckSDLTyping(SDL_Keycode* sdlKey)
 
 static MPoint SDLUi_TranslatePointFromWindowToFrontSurface(MPoint pt)
 {
+	// On macOS, the mouse position is relative to the window's "point size" on Retina screens.
+	int windowPointW = 1;
+	int windowPointH = 1;
+	int windowPixelW = 1;
+	int windowPixelH = 1;
+
+	SDL_GetWindowSize(g_window, &windowPointW, &windowPointH);
+#if SDL_VERSION_ATLEAST(2,26,0)
+	SDL_GetWindowSizeInPixels(g_window, &windowPixelW, &windowPixelH);
+#else
+	// Backwards compat with old versions of SDL
+	windowPixelW = windowPointW;
+	windowPixelH = windowPointH;
+#endif
+
+	if (windowPointW != windowPixelW || windowPointH != windowPixelH)
+	{
+		float dpiScaleX = (float) windowPixelW / (float) windowPointW;		// gGameWindowWidth is in actual pixels
+		float dpiScaleY = (float) windowPixelH / (float) windowPointH;		// gGameWindowHeight is in actual pixels
+		pt.h *= dpiScaleX;
+		pt.v *= dpiScaleY;
+	}
+
     SDL_Rect viewport;
     float scaleX, scaleY;
     SDL_RenderGetViewport(g_renderer, &viewport);
@@ -430,6 +453,12 @@ static MPoint SDLUi_TranslatePointFromWindowToFrontSurface(MPoint pt)
 
     pt.h = pt.h / scaleX - viewport.x;
     pt.v = pt.v / scaleY - viewport.y;
+
+    if (widescreen)
+    {
+        pt.h += g_widescreenCrop.x;
+        pt.v += g_widescreenCrop.y;
+    }
 
     return pt;
 }
