@@ -307,9 +307,8 @@ MBoolean     needsRefresh = false;
 
 static char  candyCrisisResources[512];
 
-MBoolean fullscreen = false;
-MBoolean widescreen = false;
-MBoolean useNewTitle = widescreen;
+MBoolean fullscreen = true;
+MBoolean widescreen = true;
 MBoolean crispUpscaling = false;
 
 int main(int argc, char *argv[])
@@ -317,11 +316,6 @@ int main(int argc, char *argv[])
 	Initialize( );
 
 	LoadPrefs( );
-    ParseCommandLine( argc, argv );
-
-    if ( widescreen )
-        useNewTitle = true;
-
 	ReserveMonitor( );
 	ShowTitle( );
 

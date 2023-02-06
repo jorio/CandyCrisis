@@ -10,5 +10,6 @@ enum
 	kHiScoreDialog,
 	kContinueDialog,
 	kControlsDialog,
+	kVideoDialog,
 	kNumDialogs
 };

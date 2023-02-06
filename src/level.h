@@ -1,6 +1,7 @@
 // level.h
 
 void InitGame( int player1, int player2 );
+void ResetWidescreenLayout( );
 MBoolean InitCharacter( int player, int level );
 void PrepareStageGraphics( int type );
 void BeginRound( MBoolean changeMusic );

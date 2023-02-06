@@ -521,8 +521,8 @@ enum
 // main pause screen (kEndGame is reused in continue and register)
 	kMusic = 0,		kResume,
 	kSound,         kEndGame,
-	kFullscreen,    kControls,
-	kScalingMode,   kWarp,
+	kVideo,         kControls,
+	kWarp,
 
 // continue screen
     kContinue,      
@@ -533,6 +533,12 @@ enum
     k1PDrop,        k2PDrop,
     k1PRotate,      k2PRotate,
     kControlsOK,    kControlsReset,
+
+// video settings screen
+    kFullscreen,
+	kWidescreen,
+    kScalingMode,
+	kVideoOK,
 };
 
 static void DrawContinueContents( int *item, int shade )
@@ -721,36 +727,58 @@ static void DrawControlsContents( int *item, int shade )
 
 static void DrawPauseContents( int *item, int shade )
 {
-	MPoint dPoint;
-	int index;
-	const char *line[]  = { "\x01 Music",           "\x03 Resume",
-                            "\x01 Sound",           "\x03 End Game",
-                            "\x01 Fullscreen",      "\x03 Controls",
-                            "\x01 Crisp Scaling",
+	const char *line[] =
+	{
+		musicOn ? "\x01 Music" : "\x02 Music",
+		level == kTutorialLevel ? "\x03 Skip Tutorial" : "\x03 Resume",
+		soundOn ? "\x01 Sound" : "\x02 Sound",
+		"\x03 End Game",
+        "\x03 Video",
+		"\x03 Controls",
 	};
-
-    const int itemCount = arrsize(line);
-	
-	if( level == kTutorialLevel ) line[kEndGame] = "\x03 Skip Tutorial";
-	
-	if( !musicOn ) line[kMusic] = "\x02 Music";
-	if( !soundOn ) line[kSound] = "\x02 Sound";
-	if( !fullscreen ) line[kFullscreen] = "\x02 Fullscreen";
-	if( !crispUpscaling ) line[kScalingMode] = "\x02 Crisp Scaling";
 
 	SDLU_AcquireSurface( drawSurface );	
 	
-	for( index=0; index<itemCount; index++ )
+	for( int i = 0; i < arrsize(line); i++ )
 	{	
-		dPoint.h = (index & 1)? 340: 180;
-		dPoint.v = 240 + ((index & ~1) * 15);
+		MPoint dPoint;
+		dPoint.h = (i & 1)? 340: 180;
+		dPoint.v = 240 + ((i & ~1) * 15);
 		
-		DrawRainbowText( smallFont, line[index], dPoint, (0.25 * index) + (0.075 * shade), (*item == index)? kTextBrightRainbow: kTextRainbow );
+		DrawRainbowText( smallFont, line[i], dPoint, (0.25 * i) + (0.075 * shade), (*item == i)? kTextBrightRainbow: kTextRainbow );
 	}
 	
 	SDLU_ReleaseSurface( drawSurface );
 }
 
+static void DrawVideoSettingsContents(int* item, int shade)
+{
+	struct ZoneLabel
+	{
+		int item;
+		const char* text;
+	}
+	labels[] =
+	{
+		{ kFullscreen,		fullscreen ? "\x01 Fullscreen" : "\x02 Fullscreen" },
+		{ kWidescreen,		widescreen ? "\x01 Widescreen" : "\x02 Widescreen" },
+		{ kScalingMode,		crispUpscaling ? "\x01 Crisp upscaling" : "\x02 Crisp upscaling" },
+		{ kVideoOK,			"\x03 OK" },
+	};
+
+	SDLU_AcquireSurface(drawSurface);
+
+	for (int i = 0; i < arrsize(labels); i++)
+	{
+		MPoint dPoint;
+		dPoint.h = 180;
+		dPoint.v = 240 + (i * 30);
+
+		DrawRainbowText(smallFont, labels[i].text, dPoint, (0.25 * i) + (0.075 * shade), (*item == labels[i].item) ? kTextBrightRainbow : kTextRainbow);
+	}
+
+	SDLU_ReleaseSurface(drawSurface);
+}
 
 static MBoolean GetClickedZone( int* item, SDL_Keycode inSDLKey, int numZones, const ClickableZone* zones )
 {
@@ -929,8 +957,8 @@ static MBoolean PauseSelected( int *item, unsigned char inKey, SDL_Keycode inSDL
 	{	
 		{ kMusic,		{ 240, 180, 260, 320 } },		{ kResume,		{ 240, 340, 260, 480 } },
 		{ kSound,		{ 270, 180, 290, 320 } },		{ kEndGame,		{ 270, 340, 290, 480 } },
-		{ kFullscreen,	{ 300, 180, 320, 320 } },		{ kControls,	{ 300, 340, 320, 480 } },
-		{ kScalingMode,	{ 330, 180, 350, 320 } },		{ kWarp,		{ 330, 340, 350, 480 } },
+		{ kVideo,		{ 300, 180, 320, 320 } },		{ kControls,	{ 300, 340, 320, 480 } },
+		{ kWarp,		{ 330, 180, 350, 320 } },
 	};
 
 	static MBoolean lastDown = false;
@@ -973,6 +1001,7 @@ static MBoolean PauseSelected( int *item, unsigned char inKey, SDL_Keycode inSDL
 				case kResume:
 				case kBack:
                 case kControls:
+                case kVideo:
                     PlayMono( kClick );
                     return true;
 
@@ -999,6 +1028,74 @@ static MBoolean PauseSelected( int *item, unsigned char inKey, SDL_Keycode inSDL
 	return false;
 }
 
+
+
+static MBoolean VideoSettingsSelected( int *item, unsigned char inKey, SDL_Keycode inSDLKey )
+{
+	(void) inSDLKey; // is unused
+	
+	static const ClickableZone zones[] = 
+	{	
+		{ kFullscreen,		{ 240, 180, 260, 320 } },
+		{ kWidescreen,		{ 270, 180, 290, 320 } },
+		{ kScalingMode,		{ 300, 180, 320, 320 } },
+		{ kVideoOK,			{ 330, 180, 350, 320 } },
+	};
+
+	static MBoolean lastDown = false;
+	
+	int trigger = GetClickedZone( item, inSDLKey, arrsize(zones), zones );
+	
+	if( trigger )
+	{
+		if( !lastDown )
+		{
+			lastDown = true;
+			
+			switch( *item )
+			{
+				case kNothing:
+					break;
+
+				case kFullscreen:
+                    fullscreen = !fullscreen;
+                    SetFullscreen( fullscreen );
+                    PlayMono( kClick );
+                    return false;
+
+				case kScalingMode:
+					crispUpscaling = !crispUpscaling;
+					SDLU_CreateRendererTexture();
+					PlayMono(kClick);
+					return false;
+
+				case kWidescreen:
+					widescreen= !widescreen;
+					ResetWidescreenLayout();
+					SDLU_CreateRendererTexture();
+					SetFullscreen(fullscreen);
+					PlayMono(kClick);
+
+					NeedRefresh();
+					//RefreshAll();
+					//RefreshPlayerWindow(0);
+					//RefreshPlayerWindow(1);
+
+					return false;
+
+				default:
+                    PlayMono( kClick );
+                    return true;
+			}
+		}
+	}
+	else
+	{
+		lastDown = false;
+	}
+	
+	return false;
+}
 
 void HandleDialog( int type )
 {	
@@ -1093,6 +1190,7 @@ void HandleDialog( int type )
 				HiScoreSelected,
 				ContinueSelected,
 				ControlsSelected,
+				VideoSettingsSelected,
 			};
 			
 			if( DialogSelected[dialogType]( &dialogItem, inASCII, inSDLKey ) )
@@ -1121,6 +1219,7 @@ void HandleDialog( int type )
 				DrawHiScoreContents,
 				DrawContinueContents,
 				DrawControlsContents,
+				DrawVideoSettingsContents,
 			};
 
 			// Refresh screen if necessary
@@ -1136,9 +1235,9 @@ void HandleDialog( int type )
 			dialogShade += skip;
 
 			{
-				const MBoolean dialogHasCandyCrisisLogo[kNumDialogs] = { true, true, true, true };
+				bool dialogHasCandyCrisisLogo = true;
 				
-				if( dialogHasCandyCrisisLogo[dialogType] )
+				if( dialogHasCandyCrisisLogo )
 					DrawDialogLogo( &pauseRect, dialogShade );
 			}
 			
@@ -1195,6 +1294,11 @@ void HandleDialog( int type )
 			
 	switch( dialogItem )
 	{
+		case kVideo:
+			HandleDialog( kVideoDialog );
+			HandleDialog( kPauseDialog );
+			break;
+
 		case kControls:
 			HandleDialog( kControlsDialog );
 			HandleDialog( kPauseDialog );

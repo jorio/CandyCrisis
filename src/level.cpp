@@ -63,12 +63,16 @@ enum
     kTitleItemQuit,
 };
 
-struct {
+struct TitleItemDef
+{
 	const char* name;
 	MRGBColor color1;
 	MRGBColor color2;
 	MRect rect;
-} titleItems[kTitleItems] = {
+};
+
+static const TitleItemDef k_titleItemDefs[kTitleItems] =
+{
 		{ "\x03 Tutorial Mode",     {204, 67,137}, {101, 74,207}, {155, 203, 207, 426} },
 		{ "\x03 One Player Game",   { 35, 31,240}, { 81,237,252}, {225, 179, 281, 451} },
 		{ "\x03 Two Player Game",   {212,194, 48}, {255,196, 56}, {297, 182, 352, 454} },
@@ -81,8 +85,6 @@ struct {
 
 const int kCursorWidth  = 32;
 const int kCursorHeight = 32;
-
-extern MBoolean useNewTitle;
 
 #if USE_CURSOR_SPRITE
 static void InsertCursor( MPoint mouseHere, SDL_Surface* scratch, SDL_Surface* surface )
@@ -124,6 +126,8 @@ static void GameStartMenuRepaint()
 
 void GameStartMenu( void )
 {
+	MBoolean        useNewTitle = widescreen;
+
 	// NOTE: be wary of initializing variables here! This function can run top-to-bottom
 	// multiple times in a row, thanks to "redo". Put initializations after redo.
     SDL_Surface*    gameStartSurface;
@@ -144,6 +148,7 @@ void GameStartMenu( void )
 	SkittlesFontPtr smallFont = GetFont( picFont );
 	SkittlesFontPtr tinyFont = GetFont( picTinyFont );
 	SDL_Rect        meterRect[2] = { { 30, 360, 110, 20 }, { 530, 360, 110, 20 } };
+	TitleItemDef    titleItems[kTitleItems];
     int             titleGlow[kTitleItems];
     int             shouldAddBlob;
     const int       kTitleGlowOff = useNewTitle? 150: 192;
@@ -151,7 +156,9 @@ void GameStartMenu( void )
     
 	const int       kLeftSide = 0, kRightSide = 1, kGlow = 2, kCursor = 3;
 	
+	
 redo:
+	memcpy(titleItems, k_titleItemDefs, sizeof(titleItems));
 
 	combo[0] = combo[1] = 0;
 	comboBright[0] = comboBright[1] = 0;
@@ -192,10 +199,13 @@ redo:
 	
 	// make drawing surface
 	gameStartDrawSurface = SDLU_InitSurface( &backdropSDLRect, 32 );
-	if (!useNewTitle) {
+	if (!useNewTitle)
+	{
 		SDLU_BlitSurface(gameStartSurface, &gameStartSurface->clip_rect,
 						 gameStartDrawSurface, &gameStartDrawSurface->clip_rect);
-	} else {
+	}
+	else
+	{
 		// Prepare new title screen
 		SDL_FillRect(gameStartDrawSurface, &gameStartDrawSurface->clip_rect, black);
 
@@ -212,13 +222,15 @@ redo:
 		int left = 225;
 		dPoint.h = left;
 		dPoint.v = 215;
-		for (int i = 0; i < kTitleItems; i++) {
+		for (int i = 0; i < kTitleItems; i++)
+		{
 			auto &item = titleItems[i];
 			item.rect.left = dPoint.h;
 			item.rect.top = dPoint.v - 6;
 			item.rect.bottom = dPoint.v + 16 + 6;
 			auto nameLength = strlen(item.name);
-			for (int charNo = 0; charNo < nameLength; charNo++) {
+			for (int charNo = 0; charNo < nameLength; charNo++)
+			{
 				char c = item.name[charNo];
 				float p = charNo / (float) (nameLength - 1);
 				int red = item.color1.red * (1.0f - p) + item.color2.red * p;
@@ -754,14 +766,7 @@ void InitGame( int player1, int player2 )
 	
 	// In widescreen mode, move score/gray windows closer to the playfield
 	// so they fit in the cropped screen.
-	if (widescreen) {
-		for (int i = 0; i < 2; i++) {
-			grayMonitorRect[i].top    = playerWindowRect[i].top - 32 - 4;
-			grayMonitorRect[i].bottom = playerWindowRect[i].top - 4;
-			scoreWindowRect[i].top    = playerWindowRect[i].bottom + 4;
-			scoreWindowRect[i].bottom = playerWindowRect[i].bottom + 16 + 4;
-		}
-	}
+	ResetWidescreenLayout();
 	
 	nextWindowVisible[0] = ( player1 == kAutoControl )? false: true;
 	
@@ -780,6 +785,19 @@ void InitGame( int player1, int player2 )
 	
 	level = 1;
 	credits = (player2 == kNobodyControl)? 1: 5;
+}
+
+void ResetWidescreenLayout()
+{
+	int miniWindowOffset = widescreen ? 4 : 16;
+
+	for (int i = 0; i < 2; i++)
+	{
+		grayMonitorRect[i].top = playerWindowRect[i].top - 32 - miniWindowOffset;
+		grayMonitorRect[i].bottom = playerWindowRect[i].top - miniWindowOffset;
+		scoreWindowRect[i].top = playerWindowRect[i].bottom + miniWindowOffset;
+		scoreWindowRect[i].bottom = playerWindowRect[i].bottom + 16 + miniWindowOffset;
+	}
 }
 
 MBoolean InitCharacter( int player, int level )

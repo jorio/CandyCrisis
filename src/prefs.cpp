@@ -112,35 +112,3 @@ void SavePrefs()
         stream.write((const char*)pref.valuePtr, pref.valueLength);
     }
 }
-
-void ParseCommandLine(int argc, char* argv[])
-{
-    for (int i = 1; i < argc; i++)
-    {
-        const char* arg = argv[i];
-
-        if (!strcmp(arg, "--crisp")) crispUpscaling = true;
-        if (!strcmp(arg, "--fullscreen")) fullscreen = true;
-        if (!strcmp(arg, "--widescreen")) widescreen = true;
-
-        if (!strcmp(arg, "--no-crisp")) crispUpscaling = false;
-        if (!strcmp(arg, "--no-fullscreen")) fullscreen = false;
-        if (!strcmp(arg, "--no-widescreen")) widescreen = false;
-
-        if (!strcmp(arg, "--help") || !strcmp(arg, "-h"))
-        {
-            printf(
-                    "Candy Crisis source port - https://github.com/jorio/candycrisis\n"
-                    "\n"
-                    "    --crisp           pixel-perfect upscaling\n"
-                    "    --no-crisp        upscale with bilinear filtering\n"
-                    "    --fullscreen      run the game fullscreen\n"
-                    "    --no-fullscreen   run the game in a window\n"
-                    "    --widescreen      crop viewport to 16:9 aspect ratio\n"
-                    "    --no-widescreen   use original 4:3 aspect ratio\n"
-                    "\n"
-            );
-            exit(0);
-        }
-    }
-}

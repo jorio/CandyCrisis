@@ -191,6 +191,8 @@ void SDLU_CreateRendererTexture()
         SDL_PIXELFORMAT_RGB888,
         SDL_TEXTUREACCESS_STREAMING,
         640, 480);
+
+    SDL_RenderSetLogicalSize(g_renderer, 640, widescreen ? 360: 480);
 }
 
 
