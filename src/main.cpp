@@ -246,6 +246,7 @@
 //
 
 #include "SDLU.h"
+#include "version.h"
 
 #include "main.h"
 
@@ -570,7 +571,7 @@ void ReserveMonitor( void )
     SDL_CreateWindowAndRenderer(resW*scale, resH*scale, SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI, &g_window, &g_renderer);
 
     SDL_RenderSetLogicalSize(g_renderer, resW, resH);
-    SDL_SetWindowTitle(g_window, "Candy Crisis");
+    SDL_SetWindowTitle(g_window, "Candy Crisis (source port v" PROJECT_VERSION ")");
 
     SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, 255);
     SDL_RenderClear(g_renderer);

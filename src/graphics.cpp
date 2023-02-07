@@ -1,6 +1,7 @@
 // graphics.c
 
 #include <stdlib.h>
+#include "version.h"
 #include "SDLU.h"
 #include "main.h"
 #include "players.h"
@@ -164,8 +165,19 @@ void ShowTitle( void )
     RetrieveResources( );
 
     MTicks time = MTickCount() + 120;
-
+	SDLU_AcquireSurface( g_frontSurface );
     DrawPICTInSurface( g_frontSurface, picTitle );
+
+	SkittlesFontPtr font = GetFont(picTinyFont);
+	MPoint dPoint;
+	dPoint.v = (widescreen ? 420 : 480) - 16;
+	dPoint.h = 4;
+	for (const char* scan = "Source port v" PROJECT_VERSION; *scan; scan++)
+	{
+		SurfaceBlitCharacter(font, *scan, &dPoint, 50, 50, 50, 1);
+	}
+	SDLU_ReleaseSurface( g_frontSurface );
+
 	while( time > MTickCount() && !SDLU_Button() )
 	{
         SDLU_Present();
