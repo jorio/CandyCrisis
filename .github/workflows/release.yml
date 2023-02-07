@@ -41,13 +41,13 @@ jobs:
         run: |
           wget https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage
           chmod +x appimagetool-x86_64.AppImage
-          ./appimagetool-x86_64.AppImage --no-appstream build/CandyCrisis.AppDir build/CandyCrisis.AppImage
+          ./appimagetool-x86_64.AppImage --no-appstream build/CandyCrisis.AppDir build/CandyCrisis-linux-x86_64.AppImage
 
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          name: linux-build
-          path: build/CandyCrisis.AppImage
+          name: CandyCrisis-linux-x86_64.AppImage
+          path: build/CandyCrisis-linux-x86_64.AppImage
           
   build-windows:
     runs-on: windows-2022
@@ -68,6 +68,7 @@ jobs:
       - name: Copy vcredist
         run: |
           cmake --install build --prefix build/install
+          copy build/ReadMe.txt build/Release
           copy build/install/bin/msvcp140.dll build/Release
           copy build/install/bin/vcruntime140.dll build/Release
           copy build/install/bin/vcruntime140_1.dll build/Release
@@ -75,7 +76,7 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          name: windows-build
+          name: CandyCrisis-windows-x64
           path: build/Release
 
   build-macos:
@@ -107,21 +108,23 @@ jobs:
         run: cmake --build build --config RelWithDebInfo -- -j ${{ env.NPROC }}
 
       - name: Codesign
-        run: codesign --force --sign ${{ secrets.APPLE_DEVELOPMENT_TEAM }} --options runtime build/RelWithDebInfo/CandyCrisis.app
+        run: codesign --force --sign ${{ secrets.APPLE_DEVELOPMENT_TEAM }} --options runtime "build/RelWithDebInfo/Candy Crisis.app"
       
       - name: Create dmg
-        run: hdiutil create -fs HFS+ -srcfolder build/RelWithDebInfo -volname "Candy Crisis" build/game.dmg
+        run: |
+          cp build/ReadMe.txt build/RelWithDebInfo
+          hdiutil create -fs HFS+ -srcfolder build/RelWithDebInfo -volname "Candy Crisis" build/CandyCrisis-mac.dmg
 
       - name: Notarize
         run: |
           xcrun notarytool store-credentials MyNotarizationProfileName --apple-id ${{ secrets.APPLE_NOTARIZATION_USERNAME }} --password ${{ secrets.APPLE_NOTARIZATION_PASSWORD }} --team-id ${{ secrets.APPLE_DEVELOPMENT_TEAM }}
-          xcrun notarytool submit build/game.dmg --keychain-profile MyNotarizationProfileName --wait
+          xcrun notarytool submit build/CandyCrisis-mac.dmg --keychain-profile MyNotarizationProfileName --wait
 
       - name: Staple
-        run: xcrun stapler staple build/game.dmg
+        run: xcrun stapler staple build/CandyCrisis-mac.dmg
 
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          name: mac-build
-          path: build/game.dmg
+          name: CandyCrisis-mac.dmg
+          path: build/CandyCrisis-mac.dmg

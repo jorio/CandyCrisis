@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.16)  # Oldest supported Ubuntu is 20.04, which ships with cmake 3.16
 
 set(GAME_TARGET "CandyCrisis")
 set(GAME_MAC_BUNDLE_ID "io.jor.candycrisis")
@@ -58,29 +58,30 @@ file(GLOB_RECURSE GAME_SOURCES CONFIGURE_DEPENDS ${GAME_SOURCE_DIR}/*.cpp ${GAME
 
 if(WIN32)
 	list(APPEND GAME_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/packaging/app.exe.rc)
-
-	add_executable(${GAME_TARGET} WIN32 MACOSX_BUNDLE ${GAME_SOURCES})
 elseif(APPLE)
 	list(APPEND GAME_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/packaging/app.icns)
 	set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/packaging/app.icns PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
-
-	add_executable(${GAME_TARGET} MACOSX_BUNDLE ${GAME_SOURCES})
 else()
 	# Math lib, explicitly required on some Linux systems
 	#list(APPEND GAME_LIBRARIES m)
-
-	add_executable(${GAME_TARGET} ${GAME_SOURCES})
 endif()
+
+add_executable(${GAME_TARGET} ${GAME_SOURCES})
 
 target_include_directories(${GAME_TARGET} PRIVATE ${GAME_SOURCE_DIR})
 
 
+if (APPLE)
+	set_target_properties(${GAME_TARGET} PROPERTIES
+		OUTPUT_NAME		"Candy Crisis")
+endif()
 
 set_target_properties(${GAME_TARGET} PROPERTIES
 	#--------------------------------------------------------------------------
 	# MSVC/WIN32
 	#--------------------------------------------------------------------------
 
+	WIN32_EXECUTABLE					TRUE					# GUI application instead of console application
 	VS_DEBUGGER_WORKING_DIRECTORY		"${CMAKE_SOURCE_DIR}"
 	VS_DPI_AWARE						"PerMonitor"
 
@@ -93,6 +94,9 @@ set_target_properties(${GAME_TARGET} PROPERTIES
 
 	# Explicitly turn off code signing, otherwise downloaded app will be quarantined forever
 	XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ""
+
+	# Build it as an .app bundle
+	MACOSX_BUNDLE						TRUE
 
 	# Set up Info.plist values
 	MACOSX_BUNDLE_ICON_FILE				"app.icns"	# CFBundleIconFile
@@ -149,3 +153,6 @@ if(WIN32)
 	# When installing (cmake --install), copy Visual Studio redistributable DLLs to install location
 	include(InstallRequiredSystemLibraries)
 endif()
+
+# Copy documentation to output folder
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/ReadMe.txt.in ${CMAKE_CURRENT_BINARY_DIR}/ReadMe.txt)
