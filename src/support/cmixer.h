@@ -1,167 +1,36 @@
-// Adapted from cmixer by rxi (https://github.com/rxi/cmixer)
-
-/*
-** Copyright (c) 2017 rxi
-**
-** Permission is hereby granted, free of charge, to any person obtaining a copy
-** of this software and associated documentation files (the "Software"), to
-** deal in the Software without restriction, including without limitation the
-** rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-** sell copies of the Software, and to permit persons to whom the Software is
-** furnished to do so, subject to the following conditions:
-**
-** The above copyright notice and this permission notice shall be included in
-** all copies or substantial portions of the Software.
-**
-** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-** IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-** FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-** AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-** LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-** FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-** IN THE SOFTWARE.
-**/
-
 #pragma once
 
-#include <vector>
-#include <functional>
-#include <cstdint>
-#include <span>
-
-#define BUFFER_SIZE (512)
-
-namespace cmixer
+enum
 {
+	CM_STATE_STOPPED,
+	CM_STATE_PLAYING,
+	CM_STATE_PAUSED
+};
 
-	enum
-	{
-		CM_STATE_STOPPED,
-		CM_STATE_PLAYING,
-		CM_STATE_PAUSED
-	};
+typedef struct CMVoice* CMVoicePtr;
+typedef const struct CMVoice* CMVoiceConstPtr;
 
-	struct Source
-	{
-		int16_t pcmbuf[BUFFER_SIZE];    // Internal buffer with raw stereo PCM
-		int samplerate;                 // Stream's native samplerate
-		int length;                     // Stream's length in frames
-		int sustainOffset;              // Offset of the sustain loop in frames
-		int end;                        // End index for the current play-through
-		int state;                      // Current state (playing|paused|stopped)
-		int64_t position;               // Current playhead position (fixed point)
-		int lgain, rgain;               // Left and right gain (fixed point)
-		int rate;                       // Playback rate (fixed point)
-		int nextfill;                   // Next frame idx where the buffer needs to be filled
-		bool loop;                      // Whether the source will loop when `end` is reached
-		bool rewind;                    // Whether the source will rewind before playing
-		bool active;                    // Whether the source is part of `sources` list
-		bool interpolate;               // Interpolated resampling when played back at a non-native rate
-		double gain;                    // Gain set by `cm_set_gain()`
-		double pan;                     // Pan set by `cm_set_pan()`
-		std::function<void()> onComplete;        // Callback
+void					CMVoice_Free(CMVoicePtr voice);
+void					CMVoice_Rewind(CMVoicePtr voice);
+double					CMVoice_GetLength(CMVoiceConstPtr voice);
+double					CMVoice_GetPosition(CMVoiceConstPtr voice);
+int						CMVoice_GetState(CMVoiceConstPtr voice);
+void					CMVoice_SetGain(CMVoicePtr voice, double gain);
+void					CMVoice_SetPan(CMVoicePtr voice, double pan);
+void					CMVoice_SetPitch(CMVoicePtr voice, double pitch);
+void					CMVoice_SetLoop(CMVoicePtr voice, int loop);
+void					CMVoice_SetInterpolation(CMVoicePtr voice, int interpolation);
+void					CMVoice_Play(CMVoicePtr voice);
+void					CMVoice_Pause(CMVoicePtr voice);
+void					CMVoice_TogglePause(CMVoicePtr voice);
+void					CMVoice_Stop(CMVoicePtr voice);
 
-		void ClearPrivate();
+CMVoicePtr				CMVoice_LoadWAV(const char* path);
 
-	protected:
-		Source();
+CMVoicePtr				CMVoice_LoadMOD(const char* path);
+void					CMVoice_SetMODPlaybackSpeed(CMVoicePtr voice, double speed);
 
-		void Init(int samplerate, int length);
-
-		virtual void RewindImplementation() = 0;
-
-		virtual void ClearImplementation() = 0;
-
-		virtual void FillBuffer(int16_t* buffer, int length) = 0;
-
-	public:
-		virtual ~Source();
-
-		void RemoveFromMixer();
-
-		void Clear();
-
-		void Rewind();
-
-		void RecalcGains();
-
-		void FillBuffer(int offset, int length);
-
-		void Process(int len);
-
-		double GetLength() const;
-
-		double GetPosition() const;
-
-		int GetState() const;
-
-		void SetGain(double gain);
-
-		void SetPan(double pan);
-
-		void SetPitch(double pitch);
-
-		void SetLoop(bool loop);
-
-		void SetInterpolation(bool interpolation);
-
-		void Play();
-
-		void Pause();
-
-		void TogglePause();
-
-		void Stop();
-	};
-
-	class WavStream : public Source
-	{
-		int bitdepth;
-		int channels;
-		bool bigEndian;
-		int idx;
-		std::span<char> span;
-		std::vector<char> userBuffer;
-
-		void ClearImplementation() override;
-
-		void RewindImplementation() override;
-
-		void FillBuffer(int16_t* buffer, int length) override;
-
-		inline uint8_t* data8() const
-		{ return reinterpret_cast<uint8_t*>(span.data()); }
-
-		inline int16_t* data16() const
-		{ return reinterpret_cast<int16_t*>(span.data()); }
-
-	public:
-		WavStream();
-
-		WavStream(WavStream&&) = default;	// move constructor ensures span stays in sync with userBuffer!
-
-		void Init(
-			int theSampleRate,
-			int theBitDepth,
-			int nChannels,
-			bool bigEndian,
-			std::span<char> data
-		);
-
-		std::span<char> GetBuffer(int nBytesOut);
-
-		std::span<char> SetBuffer(std::vector<char>&& data);
-	};
-
-
-	void InitWithSDL();
-
-	void ShutdownWithSDL();
-
-	double GetMasterGain();
-
-	void SetMasterGain(double);
-
-	WavStream LoadWAVFromFile(const char* path);
-
-}
+void					cmixer_InitWithSDL(void);
+void					cmixer_ShutdownWithSDL(void);
+double					cmixer_GetMasterGain(void);
+void					cmixer_SetMasterGain(double newGain);

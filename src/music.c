@@ -1,42 +1,30 @@
 // music.c
 
 #include <string.h>
-#include <vector>
-#include <fstream>
-
-extern "C"
-{
-
 #include "main.h"
 #include "music.h"
 #include "gworld.h"
 #include "gameticks.h"
 #include "soundfx.h"
 #include "graphics.h"
+#include "support/cmixer.h"
 
-}
+#define k_noMusic (-1)
+#define k_songs 14
 
-#include "support/ModStream.h"
-
-const int               k_noMusic = -1;
-const int               k_songs = 14;
-
-extern "C"
-{
 MBoolean                musicOn = true;
 int                     musicSelection = k_noMusic;
 
 static MBoolean         s_musicFast = false;
 int                     s_musicPaused = 0;
-}
 
-static cmixer::ModStream* s_musicChannel = NULL;
+static struct CMVoice* s_musicChannel = NULL;
 
 void EnableMusic( MBoolean on )
 {
     if (s_musicChannel)
     {
-        s_musicChannel->SetGain(on? 1.0: 0.0);
+        CMVoice_SetGain(s_musicChannel, on ? 1 : 0);
     }
 }
 
@@ -44,7 +32,7 @@ void FastMusic( void )
 {
     if (s_musicChannel && !s_musicFast)
     {
-        s_musicChannel->SetPlaybackSpeed(1.3);
+        CMVoice_SetMODPlaybackSpeed(s_musicChannel, 1.3);
         s_musicFast = true;
     }
 }
@@ -53,7 +41,7 @@ void SlowMusic( void )
 {
     if (s_musicChannel && s_musicFast)
     {
-        s_musicChannel->SetPlaybackSpeed(1.0);
+        CMVoice_SetMODPlaybackSpeed(s_musicChannel, 1.0);
         s_musicFast = false;
     }
 }
@@ -62,7 +50,7 @@ void PauseMusic( void )
 {
     if (s_musicChannel)
     {
-        s_musicChannel->Pause();
+        CMVoice_Pause(s_musicChannel);
         s_musicPaused++;
     }
 }
@@ -71,19 +59,9 @@ void ResumeMusic( void )
 {
     if (s_musicChannel)
     {
-        s_musicChannel->Play();
+        CMVoice_Play(s_musicChannel);
         s_musicPaused--;
     }
-}
-
-static std::vector<char> LoadFile(char const* filename)
-{
-    std::ifstream ifs(filename, std::ios::binary | std::ios::ate);
-    auto pos = ifs.tellg();
-    std::vector<char> bytes(pos);
-    ifs.seekg(0, std::ios::beg);
-    ifs.read(&bytes[0], pos);
-    return bytes;
 }
 
 void ChooseMusic( short which )
@@ -92,24 +70,23 @@ void ChooseMusic( short which )
     ShutdownMusic();
 
     musicSelection = -1;
-    
+
     if (which >= 0 && which <= k_songs)
     {
-        //printf("Music: %d\n" , which + 128);
-        
-        auto qrn = QuickResourceName("mod", which+128, ".mod");
-        if (!FileExists(qrn)) {
+        const char* qrn = QuickResourceName("mod", which+128, ".mod");
+        if (!FileExists(qrn))
+        {
             qrn = QuickResourceName("mod", which+128, ".s3m");
         }
-        if (!FileExists(qrn)) {
+        if (!FileExists(qrn))
+        {
             return;
         }
-        auto rawFileData = LoadFile(qrn);
 
-        s_musicChannel = new cmixer::ModStream(LoadFile(qrn));
+        s_musicChannel = CMVoice_LoadMOD(qrn);
 
         EnableMusic(musicOn);
-        s_musicChannel->Play();
+        CMVoice_Play(s_musicChannel);
     
         musicSelection = which;
         s_musicPaused  = 0;
@@ -120,8 +97,7 @@ void ShutdownMusic()
 {
     if (s_musicChannel)
     {
-        s_musicChannel->RemoveFromMixer();
-        delete s_musicChannel;
+        CMVoice_Free(s_musicChannel);
         s_musicChannel = NULL;
     }
 }

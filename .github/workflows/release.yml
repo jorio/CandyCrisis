@@ -69,9 +69,7 @@ jobs:
         run: |
           cmake --install build --prefix build/install
           copy build/ReadMe.txt build/Release
-          copy build/install/bin/msvcp140.dll build/Release
           copy build/install/bin/vcruntime140.dll build/Release
-          copy build/install/bin/vcruntime140_1.dll build/Release
 
       - name: Upload
         uses: actions/upload-artifact@v3
