@@ -113,7 +113,7 @@ void ShowScore( int player )
 		myRect = scoreWindowZRect;
 		myRect.right -= 2;
 		myRect.left = myRect.right - kNumberHorizSize;
-		for( count = int(strlen(myString)) - 1; count >= 0; count-- )
+		for( count = (int) strlen(myString) - 1; count >= 0; count-- )
 		{
 			DrawCharacter( myString[count], &myRect );
 			OffsetMRect( &myRect, -kNumberHorizSize - 1, 0 );

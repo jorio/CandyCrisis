@@ -34,10 +34,10 @@ const char* QuickResourceName( const char* prefix, int id, const char* extension
 void WaitForRegainFocus();
 
 
-struct KeyList
+typedef struct KeyList
 {
 	short left, right, drop, rotate;
-};
+} KeyList;
 
 
 #define kGridAcross 6
@@ -238,9 +238,9 @@ enum
 #define kLastBlob kBlob7
 #define kBlobTypes (kLastBlob - kFirstBlob + 1)
 
-constexpr double pi = 3.14159265358979323846264338327950288;
+#define kPi 3.14159265358979323846264338327950288
 
-#define arrsize(x) int(sizeof((x)) / sizeof((x)[0]))
+#define arrsize(x) ( (int)(sizeof((x)) / sizeof((x)[0])) )
 
 extern SDL_Renderer* g_renderer;
 extern SDL_Window*   g_window;

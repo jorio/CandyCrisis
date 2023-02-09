@@ -290,7 +290,7 @@ SDL_Renderer* g_renderer;
 SDL_Window*   g_window;
 SDL_Texture*  g_windowTexture;
 SDL_Surface*  g_frontSurface;
-SDL_Rect      g_widescreenCrop {0,60,640,360};
+SDL_Rect      g_widescreenCrop = {0,60,640,360};
 signed char  nextA[2], nextB[2], nextM[2], nextG[2], colorA[2], colorB[2],
 	         blobX[2], blobY[2], blobR[2], blobSpin[2], speed[2], role[2], halfway[2],
 	         control[2], dropping[2], magic[2], grenade[2], anim[2];
@@ -314,6 +314,9 @@ MBoolean crispUpscaling = false;
 
 int main(int argc, char *argv[])
 {
+	(void) argc;
+	(void) argv;
+
 	Initialize( );
 
 	LoadPrefs( );
@@ -436,11 +439,7 @@ void Error( const char* extra )
 
     fprintf(stderr, "%s\n", error);
 
-    SDL_ShowSimpleMessageBox(
-            SDL_MESSAGEBOX_ERROR,
-            "Candy Crisis",
-            error,
-            nullptr);
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Candy Crisis", error, NULL);
 
     abort();
 }

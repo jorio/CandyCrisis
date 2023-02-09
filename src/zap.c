@@ -3,7 +3,6 @@
 #include "SDLU.h"
 
 #include <stdio.h>
-#include <algorithm>
 
 #include "main.h"
 #include "players.h"
@@ -35,8 +34,6 @@ char zapScore[2][20] = { "", "" };
 int zapScoreWidth[2];
 int zapScoreR[2], zapScoreG[2], zapScoreB[2];
 int zapOffsetX[7][kZapFrames], zapOffsetY[7][kZapFrames];
-
-using std::min;
 
 void ZapScoreDisplay( int player, int amount, int multiplier, int x, int y, int c )
 {

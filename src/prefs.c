@@ -1,6 +1,5 @@
 // prefs.c
 
-#include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,12 +11,12 @@
 #include "hiscore.h"
 #include "keyselect.h"
 
-struct Preference
+typedef struct Preference
 {
     const char*   keyName;
     void*         valuePtr;
     unsigned int  valueLength;
-};
+} Preference;
 
 Preference prefList[] =
 {
@@ -31,84 +30,74 @@ Preference prefList[] =
     { "CrispUpscaling",     &crispUpscaling,    sizeof(crispUpscaling   ) },
 };
 
-static std::fstream GetPrefsStream(std::ios::openmode openmode)
+static FILE* GetPrefsStream(const char* openmode)
 {
     static char path[1024];
     const char* userDir = SDL_GetPrefPath(NULL, "CandyCrisis");
     snprintf(path, sizeof(path), "%sCandyCrisisPrefs.bin", userDir);
-
-    return std::fstream(path, std::ios::binary | openmode);
+    return fopen(path, openmode);
 }
 
 void LoadPrefs()
 {
-    std::fstream stream;
-    try
-    {
-        stream = GetPrefsStream(std::ios::in);
-    }
-    catch (...)
+    FILE* stream = GetPrefsStream("rb");
+    if (!stream)
     {
         return;
     }
 
-    if (!stream.good())
+    for (int i = 0; i < arrsize(prefList); i++)
     {
-        return;
-    }
+        Preference* pref = &prefList[i];
+        
+        fseek(stream, 0, SEEK_SET);
 
-    for (Preference& pref: prefList)
-    {
-        stream.seekg(0, std::ios::beg);
-        while (stream.good() && !stream.eof())
+        while (!feof(stream))
         {
             int keyLength;
             char key[256];
             unsigned int contentsLength;
 
-            keyLength = stream.get();
-            if (stream.eof()) break;
-            stream.read(key, keyLength);
+            keyLength = fgetc(stream);
+            if (keyLength < 0 || feof(stream))
+                break;
+            fread(key, keyLength, 1, stream);
             key[keyLength] = '\0';
-            stream.read((char*)&contentsLength, sizeof(contentsLength));
+            fread(&contentsLength, sizeof(contentsLength), 1, stream);
 
-            if (!strncmp(key, pref.keyName, strlen(pref.keyName)))
+            if (!strncmp(key, pref->keyName, strlen(pref->keyName)))
             {
-                if (contentsLength != pref.valueLength)
+                if (contentsLength != pref->valueLength)
                     break;
-                stream.read((char*) pref.valuePtr, pref.valueLength);
+                fread(pref->valuePtr, pref->valueLength, 1, stream);
                 break;
             }
             else
             {
-                stream.seekg(contentsLength, std::ios::cur);
+                fseek(stream, contentsLength, SEEK_CUR);
             }
         }
     }
+
+    fclose(stream);
 }
 
 void SavePrefs()
 {
-    std::fstream stream;
-    try
-    {
-        stream = GetPrefsStream(std::ios::out);
-    }
-    catch (...)
+    FILE* stream = GetPrefsStream("wb");
+    if (!stream)
     {
         return;
     }
 
-    if (!stream.good())
+    for (int i = 0; i < arrsize(prefList); i++)
     {
-        return;
+        const Preference* pref = &prefList[i];
+        fputc(strlen(pref->keyName), stream);
+        fwrite(pref->keyName, strlen(pref->keyName), 1, stream);
+        fwrite(&pref->valueLength, sizeof(pref->valueLength), 1, stream);
+        fwrite(pref->valuePtr, pref->valueLength, 1, stream);
     }
-
-    for (Preference& pref: prefList)
-    {
-        stream.put(strlen(pref.keyName));
-        stream.write(pref.keyName, strlen(pref.keyName));
-        stream.write((const char*)&pref.valueLength, sizeof(pref.valueLength));
-        stream.write((const char*)pref.valuePtr, pref.valueLength);
-    }
+    
+    fclose(stream);
 }

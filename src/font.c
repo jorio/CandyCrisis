@@ -7,9 +7,9 @@
 #include "gworld.h"
 
 
-const int kNumFonts = (picBatsuFont-picFont+1);
+#define kNumFonts (picBatsuFont-picFont+1)
 
-static SkittlesFont s_font[kNumFonts] = {};
+static SkittlesFont s_font[kNumFonts];
 
 
 static SkittlesFontPtr LoadFont( SkittlesFontPtr font, int pictID, unsigned char *letterMap )

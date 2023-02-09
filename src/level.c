@@ -2,7 +2,6 @@
 
 #include <stdlib.h>
 #include <math.h>
-#include <algorithm>
 
 #include "SDLU.h"
 
@@ -42,9 +41,6 @@ int difficultyTicks, backdropTicks, backdropFrame;
 #define kIncrementPerFrame 2
 #define kSplatType 4
 
-using std::min;
-using std::max;
-
 const int startSkip = 1;
 static MBoolean shouldFullRepaint = false;
 static MTicks startMenuTime = 0;
@@ -63,13 +59,13 @@ enum
     kTitleItemQuit,
 };
 
-struct TitleItemDef
+typedef struct TitleItemDef
 {
 	const char* name;
 	MRGBColor color1;
 	MRGBColor color2;
 	MRect rect;
-};
+} TitleItemDef;
 
 static const TitleItemDef k_titleItemDefs[kTitleItems] =
 {
@@ -224,21 +220,21 @@ redo:
 		dPoint.v = 215;
 		for (int i = 0; i < kTitleItems; i++)
 		{
-			auto &item = titleItems[i];
-			item.rect.left = dPoint.h;
-			item.rect.top = dPoint.v - 6;
-			item.rect.bottom = dPoint.v + 16 + 6;
-			auto nameLength = strlen(item.name);
+			TitleItemDef* item = &titleItems[i];
+			item->rect.left = dPoint.h;
+			item->rect.top = dPoint.v - 6;
+			item->rect.bottom = dPoint.v + 16 + 6;
+			int nameLength = (int) strlen(item->name);
 			for (int charNo = 0; charNo < nameLength; charNo++)
 			{
-				char c = item.name[charNo];
+				char c = item->name[charNo];
 				float p = charNo / (float) (nameLength - 1);
-				int red = item.color1.red * (1.0f - p) + item.color2.red * p;
-				int green = item.color1.green * (1.0f - p) + item.color2.green * p;
-				int blue = item.color1.blue * (1.0f - p) + item.color2.blue * p;
+				int red = item->color1.red * (1.0f - p) + item->color2.red * p;
+				int green = item->color1.green * (1.0f - p) + item->color2.green * p;
+				int blue = item->color1.blue * (1.0f - p) + item->color2.blue * p;
 				SurfaceBlitCharacter(font, c, &dPoint, red, green, blue, 1);
 			}
-			item.rect.right = dPoint.h;
+			item->rect.right = dPoint.h;
 			dPoint.h = left;
 			dPoint.v += 24;
 		}
@@ -478,7 +474,7 @@ redo:
 		// update glows
 		for (int glowUpdate=0; glowUpdate < kTitleItems; ++glowUpdate)
 		{
-			const MRect& titleRect = titleItems[glowUpdate].rect;
+			const MRect* titleRect = &titleItems[glowUpdate].rect;
 			oldGlow = titleGlow[glowUpdate];
 			
 			if( selected == glowUpdate )
@@ -495,13 +491,13 @@ redo:
 			if( titleGlow[glowUpdate] != oldGlow )
 			{
 				SurfaceBlitColorOver( gameStartSurface,       gameStartDrawSurface,
-									  &titleRect, &titleRect,
+									  titleRect, titleRect,
 									   0, 0, 0, titleGlow[glowUpdate] );
 
-				drawRect[kGlow].top    = min<short>(drawRect[kGlow].top, titleRect.top);
-				drawRect[kGlow].left   = min<short>(drawRect[kGlow].left, titleRect.left);
-				drawRect[kGlow].bottom = max<short>(drawRect[kGlow].bottom, titleRect.bottom);
-				drawRect[kGlow].right  = max<short>(drawRect[kGlow].right, titleRect.right);
+				drawRect[kGlow].top    = MinShort(drawRect[kGlow].top, titleRect->top);
+				drawRect[kGlow].left   = MinShort(drawRect[kGlow].left, titleRect->left);
+				drawRect[kGlow].bottom = MaxShort(drawRect[kGlow].bottom, titleRect->bottom);
+				drawRect[kGlow].right  = MaxShort(drawRect[kGlow].right, titleRect->right);
 			}
 		}
 
@@ -1274,13 +1270,14 @@ void RegisteredVictory( void )
 	};
 
 	// In widescreen mode, move vertical text positions closer to the center
-	if (widescreen) {
-		for (auto& dp : dPoint) {
-			if (dp.v >= 130) {
-				dp.v -= 20;
-			} else {
-				dp.v += 20;
-			}
+	if (widescreen)
+	{
+		for (int i = 0; i < arrsize(dPoint); i++)
+		{
+			if (dPoint[i].v >= 130)
+				dPoint[i].v -= 20;
+			else
+				dPoint[i].v += 20;
 		}
 	}
 	

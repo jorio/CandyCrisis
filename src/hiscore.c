@@ -5,7 +5,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <algorithm>
 
 #include "main.h"
 #include "gworld.h"
@@ -24,8 +23,6 @@
 #include "gameticks.h"
 #include "music.h"
 #include "soundfx.h"
-
-using std::min;
 
 Combo defaultBest = 
 {
@@ -225,9 +222,9 @@ void ShowHiscore( void )
 		
 	SDLU_GetPixel( hiScoreSurface, RandomBefore( fullSDLRect.w ), RandomBefore( fullSDLRect.h ), &anyColor );
 
-	anyColor.r = min( 255, anyColor.r + 112 );
-	anyColor.g = min( 255, anyColor.g + 112 );
-	anyColor.b = min( 255, anyColor.b + 112 );
+	anyColor.r = MinInt( 255, anyColor.r + 112 );
+	anyColor.g = MinInt( 255, anyColor.g + 112 );
+	anyColor.b = MinInt( 255, anyColor.b + 112 );
 
 	dPoint.v = widescreen? 100: 20;
 	dPoint.h = 225;

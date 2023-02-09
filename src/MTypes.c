@@ -8,18 +8,14 @@
 
 
 #include "MTypes.h"
-#include <algorithm>
-
-using std::min;
-using std::max;
 
 
 void UnionMRect( const MRect* a, const MRect* b, MRect* u )
 {
-	u->top    = min( a->top, b->top );
-	u->left   = min( a->left, b->left );
-	u->bottom = max( a->bottom, b->bottom );
-	u->right  = max( a->right, b->right );
+	u->top    = MinShort( a->top, b->top );
+	u->left   = MinShort( a->left, b->left );
+	u->bottom = MaxShort( a->bottom, b->bottom );
+	u->right  = MaxShort( a->right, b->right );
 }
 
 

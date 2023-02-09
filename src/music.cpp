@@ -4,6 +4,9 @@
 #include <vector>
 #include <fstream>
 
+extern "C"
+{
+
 #include "main.h"
 #include "music.h"
 #include "gworld.h"
@@ -11,16 +14,21 @@
 #include "soundfx.h"
 #include "graphics.h"
 
+}
+
 #include "support/ModStream.h"
 
 const int               k_noMusic = -1;
 const int               k_songs = 14;
 
+extern "C"
+{
 MBoolean                musicOn = true;
 int                     musicSelection = k_noMusic;
 
 static MBoolean         s_musicFast = false;
 int                     s_musicPaused = 0;
+}
 
 static cmixer::ModStream* s_musicChannel = NULL;
 

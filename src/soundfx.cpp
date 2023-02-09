@@ -1,13 +1,16 @@
 // soundfx.c
 
-#include "main.h"
-#include "soundfx.h"
-#include "music.h"
-
 #include "support/cmixer.h"
 #include <stdio.h>
 
-MBoolean soundOn = true;
+extern "C"
+{
+    #include "main.h"
+    #include "soundfx.h"
+    #include "music.h"
+
+    MBoolean soundOn = true;
+}
 
 static std::vector<cmixer::WavStream> s_soundBank;
 static constexpr float k_playerStereoSeparation = 0.5f;

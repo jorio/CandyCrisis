@@ -48,7 +48,7 @@ void InitOpponent( void )
 	
 	for( index=0; index<kGlowArraySize; index++ )
 	{
-		value = sin( index*pi/kGlowArraySize );
+		value = sin( index*kPi/kGlowArraySize );
 		value *= value;
 		
 		heavyGlowArray[(int)index] = (int)(value * 0.75  * 256);

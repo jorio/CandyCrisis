@@ -6,6 +6,6 @@ void StartTweak( int player, int direction, int rotate, int fall );
 void UpdateTweak( int player, int suction );
 void InitTweak( void );
 
-#define d2r(x) ((x)*(pi/180))
+#define d2r(x) ((x)*(kPi/180))
 
 #define kTweakDelay 1

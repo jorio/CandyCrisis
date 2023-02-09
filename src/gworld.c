@@ -185,8 +185,8 @@ SDL_Surface* LoadPICTAsSurface( int pictID, int depth )
 {
 	const char*  filename;
 	SDL_Surface* surface;
-    SDL_Rect     rect = {};
-    uint8_t*     pixels = nullptr;
+    SDL_Rect     rect = {0};
+    uint8_t*     pixels = NULL;
 
 	filename = QuickResourceName( "PICT", pictID, ".jpg" );
 	if( !FileExists( filename ) )
@@ -195,7 +195,7 @@ SDL_Surface* LoadPICTAsSurface( int pictID, int depth )
 	}
     if( !FileExists( filename ) )
     {
-        return nullptr;
+        return NULL;
     }
 
     pixels = stbi_load(filename, &rect.w, &rect.h, NULL, 3);

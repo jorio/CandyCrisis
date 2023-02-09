@@ -23,7 +23,9 @@ SDL_Surface* backdropSurface = NULL;
 void DrawSpriteBlobs( int player, int type )
 {
 	MRect firstRect, secondRect, thirdRect;
-	const int repeat = 0xFF, forever = 0xFE;
+
+#define repeat 0xFF
+#define forever 0xFE
 	
 	static const unsigned char blobAnimation[6][2][25] = 
 	{ 
@@ -100,6 +102,9 @@ void DrawSpriteBlobs( int player, int type )
 	SurfaceDrawSprite( &secondRect, colorB[player], blobAnimation[type][1][anim[player]] );
 	
 	SDLU_ReleaseSurface( playerSpriteSurface[player] );
+
+#undef repeat
+#undef forever
 }
 
 void CleanSpriteArea( int player, MRect *myRect )

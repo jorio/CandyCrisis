@@ -9,14 +9,10 @@
 #include "SDLU.h"
 #include "gameticks.h"
 #include "music.h"
-
 #include "main.h" // for Error
-#include <deque>
-
-using std::deque;
 
 // for acquiresurface
-const int           k_acquireMax = 10;
+#define k_acquireMax 10
 static int          s_acquireHead = -1;
 static SDL_Surface* s_acquireList[k_acquireMax];
 
@@ -38,7 +34,7 @@ static MBoolean     s_isForeground = true;
 static float        s_fadeGamma = 1;
  
 // for checktyping
-struct BufferedKey
+typedef struct BufferedKey
 {
     bool isASCII;
     
@@ -47,14 +43,18 @@ struct BufferedKey
         char         ascii;
         SDL_Keycode  keycode;
     } value;
-};
+} BufferedKey;
 
+#define k_maxBufferedKeys 256
 
 static MBoolean                s_interestedInTyping = false;
-static std::deque<BufferedKey> s_keyBuffer;
+static BufferedKey             s_keyBuffer[k_maxBufferedKeys];
+static int                     s_keyBufferSize = 0;
 
-int SDLUi_EventFilter(void*, SDL_Event *event)
+int SDLUi_EventFilter(void* junk, SDL_Event *event)
 {
+	(void) junk;
+	
     switch (event->type)
     {
         case SDL_TEXTINPUT:
@@ -67,7 +67,8 @@ int SDLUi_EventFilter(void*, SDL_Event *event)
                     BufferedKey key;
                     key.isASCII = true;
                     key.value.ascii = *asciiPtr;
-                    s_keyBuffer.push_back(key);
+                    s_keyBuffer[s_keyBufferSize] = key;
+                    s_keyBufferSize = MinInt(k_maxBufferedKeys, s_keyBufferSize + 1);
                 }
             }
             break;
@@ -81,7 +82,8 @@ int SDLUi_EventFilter(void*, SDL_Event *event)
                 BufferedKey key;
                 key.isASCII = false;
                 key.value.keycode = event->key.keysym.sym;
-                s_keyBuffer.push_back(key);
+                s_keyBuffer[s_keyBufferSize] = key;
+                s_keyBufferSize = MinInt(k_maxBufferedKeys, s_keyBufferSize + 1);
             }
             break;
         }
@@ -385,7 +387,7 @@ MBoolean SDLU_IsForeground()
 void SDLU_StartWatchingTyping()
 {
 	s_interestedInTyping = true;
-    s_keyBuffer.clear();
+    s_keyBufferSize = 0;  // clear keybuffer
 }
 
 
@@ -397,10 +399,13 @@ void SDLU_StopWatchingTyping()
 
 MBoolean SDLU_CheckASCIITyping(char* ascii)
 {
-    if (!s_keyBuffer.empty() && s_keyBuffer.front().isASCII)
+    if (s_keyBufferSize > 0 && s_keyBuffer[0].isASCII)
 	{
-        *ascii = s_keyBuffer.front().value.ascii;
-        s_keyBuffer.pop_front();
+        *ascii = s_keyBuffer[0].value.ascii;
+
+        s_keyBufferSize--;
+        SDL_memcpy(&s_keyBuffer[0], &s_keyBuffer[1], (s_keyBufferSize) * sizeof(BufferedKey));
+
 		return true;
 	}
 
@@ -411,10 +416,13 @@ MBoolean SDLU_CheckASCIITyping(char* ascii)
 
 MBoolean SDLU_CheckSDLTyping(SDL_Keycode* sdlKey)
 {
-    if (!s_keyBuffer.empty() && !s_keyBuffer.front().isASCII)
+    if (s_keyBufferSize > 0 && !s_keyBuffer[0].isASCII)
     {
-        *sdlKey = s_keyBuffer.front().value.keycode;
-        s_keyBuffer.pop_front();
+        *sdlKey = s_keyBuffer[0].value.keycode;
+
+        s_keyBufferSize--;
+        SDL_memcpy(&s_keyBuffer[0], &s_keyBuffer[1], (s_keyBufferSize) * sizeof(BufferedKey));
+
         return true;
     }
     

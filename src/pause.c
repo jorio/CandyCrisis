@@ -7,7 +7,6 @@
 
 #include "SDLU.h"
 
-#include <algorithm>
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
@@ -30,19 +29,16 @@
 #include "hiscore.h"
 #include "score.h"
 
-using std::min;
-using std::max;
-
-struct FRGBColor
+typedef struct FRGBColor
 {
 	float red, green, blue;
-};
+} FRGBColor;
 
-struct ClickableZone
+typedef struct ClickableZone
 {
 	int item;
 	MRect rect;
-};
+} ClickableZone;
 
 SDL_Surface* backSurface;
 SDL_Surface* drawSurface;
@@ -122,14 +118,14 @@ static MPoint DrawRainbowText( SkittlesFontPtr font, const char *line, MPoint dP
 		{
 			case kTextBrightRainbow:
 				r = (int)(208.0 + 40.0 * sin(wave                    ));
-				g = (int)(208.0 + 40.0 * sin(wave + ((2.*pi) * 1./3.)));
-				b = (int)(208.0 + 40.0 * sin(wave + ((2.*pi) * 2./3.)));
+				g = (int)(208.0 + 40.0 * sin(wave + ((2.*kPi) * 1./3.)));
+				b = (int)(208.0 + 40.0 * sin(wave + ((2.*kPi) * 2./3.)));
 				break;
 
 			case kTextRainbow:
 				r = (int)(128.0 + 96.0 * sin(wave                    ));
-				g = (int)(128.0 + 96.0 * sin(wave + ((2.*pi) * 1./3.)));
-				b = (int)(128.0 + 96.0 * sin(wave + ((2.*pi) * 2./3.)));
+				g = (int)(128.0 + 96.0 * sin(wave + ((2.*kPi) * 1./3.)));
+				b = (int)(128.0 + 96.0 * sin(wave + ((2.*kPi) * 2./3.)));
 				break;
 		}
 
@@ -648,7 +644,7 @@ static void DrawHiScoreContents( int *item, int shade )
 		SurfaceBlitCharacter( dashedLineFont, '.', &dashedLinePoint, 0, 0, 0, 0 );
 	}
 	
-	nameLength = int(strlen(highScoreName));
+	nameLength = (int) strlen(highScoreName);
 	for( index = 0; index < nameLength; index++ )
 	{
 		SurfaceBlitCharacter( bigFont, highScoreName[index], &hPoint, 255, 255, 255, 1 );
@@ -832,7 +828,7 @@ static MBoolean ContinueSelected( int *item, unsigned char inKey, SDL_Keycode in
 
 static MBoolean HiScoreSelected( int *item, unsigned char inKey, SDL_Keycode inSDLKey )
 {
-	int nameLength = int(strlen(highScoreName));
+	int nameLength = (int) strlen(highScoreName);
 	
 	// return (SDL key)
 	if( inSDLKey == SDLK_RETURN )
@@ -1136,9 +1132,9 @@ void HandleDialog( int type )
         
         SDLU_GetPixel( boardSurface[0], RandomBefore( boardWorldZRect.right ), RandomBefore( boardWorldZRect.bottom ), &inColor );
     
-        backColor[count].red   = min( 255.0f, inColor.r + lighten[count] );
-        backColor[count].green = min( 255.0f, inColor.g + lighten[count] );
-        backColor[count].blue  = min( 255.0f, inColor.b + lighten[count] );
+        backColor[count].red   = MinInt( 255.0f, inColor.r + lighten[count] );
+        backColor[count].green = MinInt( 255.0f, inColor.g + lighten[count] );
+        backColor[count].blue  = MinInt( 255.0f, inColor.b + lighten[count] );
     }
 	
 	// Get some graphics that we're going to need
