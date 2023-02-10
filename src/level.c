@@ -1097,8 +1097,8 @@ const char *gameCredits[][6] =
 {
 	{ "Programming", "John Stiles", "", "", "", "" },
 	{ "Artwork", "Kate Davis", "Leanne Stiles", "Arnauld de la Grandiere", "Bob Frasure", "Ryan Bliss" },
-	{ "Music", "Leanne Stiles", "fmod", "Lizardking", "Armadon, Explizit", "Leviathan, Nemesis" },
-	{ "Music", "Jester, Pygmy", "Siren", "Sirrus", "Scaven, FC", "Spring" }, 		  
+	{ "Music", "Leanne Stiles", "Lizardking", "Armadon, Explizit", "Leviathan, Nemesis", "" },
+	{ "Music", "Jester, Pygmy", "Siren", "Sirrus", "Skaven, FC", "Spring" }, 		  
 	{ "Music", "Timewalker", "Jason, Silents", "Chromatic Dragon", "Ng Pei Sin", "" },
 	{ "Source Port", "Iliyas Jorio", "github.com/jorio/candycrisis", "", "", "" },
 	{ "Special Thanks", "Sam Lantinga", "Carey Lening", "modarchive.com", "digitalblasphemy.com", "" },	  
