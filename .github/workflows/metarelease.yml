@@ -1,0 +1,12 @@
+name: Meta Release Big 3
+
+on: [workflow_dispatch]
+
+jobs:
+  appimage-x86_64:
+    uses: ./.github/workflows/release-appimage-x86_64.yml
+  mac:
+    uses: ./.github/workflows/release-mac.yml
+    secrets: inherit
+  windows:
+    uses: ./.github/workflows/release-windows.yml

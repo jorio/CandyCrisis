@@ -8,19 +8,7 @@ Get pre-built binaries here: https://github.com/jorio/CandyCrisis/releases
 
 ## How to build from source
 
-Prerequisites:
-- macOS: git, cmake, Xcode
-- Windows: git, cmake, Visual Studio 2022
-- Others: git, cmake, and a decent C++20 toolchain
-
-Build recipe:
-
-```bash
-git clone --recurse-submodules https://github.com/jorio/CandyCrisis
-cd CandyCrisis
-cmake -S . -B build
-cmake --build build
-```
+See [BUILD.md](BUILD.md)
 
 ## Credits/license
 

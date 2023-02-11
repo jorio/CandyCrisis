@@ -4,4 +4,6 @@
 /dist
 /extern
 
+/SDL*
+
 .DS_Store

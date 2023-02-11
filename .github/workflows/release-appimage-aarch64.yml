@@ -1,9 +1,15 @@
-name: Make Release Builds (linux/aarch64)
+name: Release AppImage aarch64
 
-on: [workflow_dispatch]
+on: [workflow_dispatch, workflow_call]
+
+env:
+  SDL2_VERSION: "2.26.3"
+  APPIMAGETOOL_VERSION: "13"
+  GAME_SHORTNAME: "CandyCrisis"
+  GAME_LONGNAME: "Candy Crisis"
 
 jobs:
-  build-linux-appimage-aarch64:
+  release-appimage-aarch64:
     runs-on: ubuntu-20.04
     timeout-minutes: 100  # this job may take up to an hour
 
@@ -26,6 +32,10 @@ jobs:
           chmod +x appimagetool-x86_64.AppImage
           chmod +x runtime-aarch64
           popd
+
+      - name: Get SDL source
+        run: |
+          git clone --depth 1 --branch release-${{env.SDL2_VERSION}} https://github.com/libsdl-org/SDL
 
       - uses: uraimo/run-on-arch-action@v2
         name: Build game via QEMU
@@ -56,14 +66,15 @@ jobs:
               libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
               libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev fcitx-libs-dev
 
-          # Build the aarch64 version under dist/, then tar it up and move it to /artifacts.
+          # Build the aarch64 version under dist/, then tar it up and move the tarball to /artifacts.
           # (We're not building directly in /artifacts as this would cause permission issues when moving back to the x86_64 host)
           run: |
-            cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
+            #cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo  #----- for quick testing
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SDL_FROM_SOURCE=1 -DSTATIC_SDL=1
             cmake --build build
-            bash packaging/prepare_appimage_appdir.sh build/CandyCrisis
+            bash packaging/prepare_appimage_appdir.sh build/${{env.GAME_SHORTNAME}}
             cd build
-            tar cvf /artifacts/aarch64-dist.tar ./*.AppDir
+            tar cvf /artifacts/aarch64-dist.tar ./*.AppDir ./version.txt
 
       # QEMU can't run appimagetool-aarch64, so we have to build the AppImage on x86_64
       - name: Create AppImage on x86_64 host
@@ -71,14 +82,15 @@ jobs:
           cd artifacts
           tar xvf aarch64-dist.tar
 
-          APPIMAGE_INPUT=$(ls -d --indicator-style=none *.AppDir)
-          APPIMAGE_OUTPUT=${APPIMAGE_INPUT%.AppDir}.AppImage
-          echo "APPIMAGE_OUTPUT=$APPIMAGE_OUTPUT" >> $GITHUB_ENV
+          GAME_VERSION=$(cat version.txt)
+          ARTIFACT_NAME="${{env.GAME_SHORTNAME}}-$GAME_VERSION-linux-aarch64.AppImage"
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
 
-          ./appimagetool-x86_64.AppImage -v --runtime-file runtime-aarch64 --no-appstream $APPIMAGE_INPUT $APPIMAGE_OUTPUT
+          APPIMAGE_INPUT=$(ls -d --indicator-style=none *.AppDir)
+          ./appimagetool-x86_64.AppImage -v --runtime-file runtime-aarch64 --no-appstream $APPIMAGE_INPUT $ARTIFACT_NAME
 
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.APPIMAGE_OUTPUT }}
-          path: artifacts/${{ env.APPIMAGE_OUTPUT }}
+          name: ${{ env.ARTIFACT_NAME }}
+          path: artifacts/${{ env.ARTIFACT_NAME }}

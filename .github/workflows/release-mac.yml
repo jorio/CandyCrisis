@@ -1,0 +1,78 @@
+name: Release Mac
+
+on: [workflow_dispatch, workflow_call]
+
+env:
+  SDL2_VERSION: "2.26.3"
+  GAME_SHORTNAME: "CandyCrisis"
+  GAME_LONGNAME: "Candy Crisis"
+
+jobs:
+  release-mac:
+    runs-on: macos-11
+    timeout-minutes: 20
+
+    steps:
+      - name: Get CPU count
+        run: |
+          NPROC=$(python3 -c 'import multiprocessing; print(multiprocessing.cpu_count())')
+          echo "NPROC=$NPROC" >> $GITHUB_ENV
+          echo CPU count = $NPROC
+
+      - name: Import codesigning certs
+        uses: apple-actions/import-codesign-certs@v1
+        with:
+          p12-file-base64: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_BASE64 }}
+          p12-password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+
+      - name: Get SDL2.framework
+        run: |
+          curl -LO https://github.com/libsdl-org/SDL/releases/download/release-${{env.SDL2_VERSION}}/SDL2-${{env.SDL2_VERSION}}.dmg
+          hdiutil attach SDL2-*.dmg
+          cp -a /Volumes/SDL2/SDL2.framework SDL2.framework
+          hdiutil detach /Volumes/SDL2
+
+      - name: Configure
+        run: cmake -S . -B build -G Xcode -DCODE_SIGN_IDENTITY=${{ secrets.APPLE_CODE_SIGN_IDENTITY }}
+
+      - name: Prepare artifact names
+        run: |
+          GAME_VERSION=$(cat build/version.txt)
+          FOLDER_NAME="${{env.GAME_LONGNAME}} $GAME_VERSION"
+          ARTIFACT_NAME="${{env.GAME_SHORTNAME}}-$GAME_VERSION-mac.dmg"
+          echo "GAME_VERSION=$GAME_VERSION" >> $GITHUB_ENV
+          echo "FOLDER_NAME=$FOLDER_NAME" >> $GITHUB_ENV
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
+
+      - name: Build
+        run: cmake --build build --config RelWithDebInfo -- -j ${{ env.NPROC }}
+
+      #- name: Force codesigning (not necessary since we tell Xcode to do it for us)
+      #  run: codesign --force --sign ${{ secrets.APPLE_DEVELOPMENT_TEAM }} --options runtime "build/RelWithDebInfo/${{env.GAME_LONGNAME}}.app"
+
+      - name: Check codesigning
+        run: codesign -vvv --deep --strict "build/RelWithDebInfo/${{env.GAME_LONGNAME}}.app"
+
+      - name: Create dmg
+        run: |
+          cp build/ReadMe.txt build/RelWithDebInfo
+          hdiutil create -fs HFS+ -srcfolder build/RelWithDebInfo -volname "${{env.FOLDER_NAME}}" build/${{env.ARTIFACT_NAME}}
+
+      - name: Notarize
+        run: |
+          xcrun notarytool store-credentials GameNotarizationProfile --apple-id ${{ secrets.APPLE_NOTARIZATION_USERNAME }} --password ${{ secrets.APPLE_NOTARIZATION_PASSWORD }} --team-id ${{ secrets.APPLE_DEVELOPMENT_TEAM }}
+          xcrun notarytool submit build/${{env.ARTIFACT_NAME}} --keychain-profile GameNotarizationProfile --wait
+
+      - name: Staple
+        run: xcrun stapler staple build/${{env.ARTIFACT_NAME}}
+
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{env.ARTIFACT_NAME}}
+          path: build/${{env.ARTIFACT_NAME}}
