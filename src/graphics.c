@@ -15,6 +15,7 @@
 #include "grays.h"
 #include "level.h"
 #include "keyselect.h"
+#include "music.h"
 
 
 SDL_Surface* backdropSurface = NULL;
@@ -169,7 +170,6 @@ void ShowTitle( void )
 
     RetrieveResources( );
 
-    MTicks time = MTickCount() + 120;
 	SDLU_AcquireSurface( g_frontSurface );
     DrawPICTInSurface( g_frontSurface, picTitle );
 
@@ -183,6 +183,11 @@ void ShowTitle( void )
 	}
 	SDLU_ReleaseSurface( g_frontSurface );
 
+	ChooseMusic( 13 );
+
+	QuickFadeIn( NULL );
+
+	MTicks time = MTickCount() + 150;
 	while( time > MTickCount() && !SDLU_Button() )
 	{
         SDLU_Present();

@@ -6,6 +6,7 @@ void PauseMusic( void );
 void ResumeMusic( void );
 void FastMusic( void );
 void SlowMusic( void );
+int GetCurrentMusic( void );
 void ChooseMusic( short which );
 void ShutdownMusic();
 

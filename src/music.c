@@ -64,6 +64,11 @@ void ResumeMusic( void )
     }
 }
 
+int GetCurrentMusic( void )
+{
+	return musicSelection;
+}
+
 void ChooseMusic( short which )
 {
     // Kill existing song first, if any

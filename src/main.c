@@ -323,7 +323,8 @@ int main(int argc, char *argv[])
 	ReserveMonitor( );
 	ShowTitle( );
 
-	ChooseMusic( 13 );
+	if ( GetCurrentMusic() != 13 )
+		ChooseMusic( 13 );
 	
 	while (!finished)
 	{
