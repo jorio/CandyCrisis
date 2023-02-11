@@ -93,7 +93,7 @@ void SavePrefs()
     for (int i = 0; i < arrsize(prefList); i++)
     {
         const Preference* pref = &prefList[i];
-        fputc(strlen(pref->keyName), stream);
+        fputc((uint8_t) strlen(pref->keyName), stream);
         fwrite(pref->keyName, strlen(pref->keyName), 1, stream);
         fwrite(&pref->valueLength, sizeof(pref->valueLength), 1, stream);
         fwrite(pref->valuePtr, pref->valueLength, 1, stream);

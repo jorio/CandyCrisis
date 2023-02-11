@@ -177,9 +177,10 @@ if(NOT MSVC)
 	target_compile_options(${GAME_TARGET} PRIVATE
 		-Wall
 		-Wextra
-		-Wshadow
+		#-Wshadow  # Note: Candy Crisis goes crazy with shadowing
 		-Werror=return-type
 		-Wstrict-aliasing=2
+		-Wno-multichar
 	)
 
 	# Sanitizers in debug mode (Linux only)

@@ -12,7 +12,7 @@
 
 MTicks xTweakTime[2], yTweakTime[2], rTweakTime[2];
 int yTweak[2], xTweak[2], xDirection[2], rTweak[2], rDirection[2];
-int lastShadow[2];
+static unsigned int lastShadow[2];
 int tweakOffsetX[4][11], tweakOffsetY[4][11];
 
 void InitTweak( void )

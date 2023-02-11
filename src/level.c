@@ -130,9 +130,9 @@ void GameStartMenu( void )
     SDL_Surface*    gameStartDrawSurface;
 #if USE_CURSOR_SPRITE
     SDL_Surface*    cursorBackSurface;
+	SDL_Rect        cursorBackSDLRect = { 0, 0, kCursorWidth, kCursorHeight };
 #endif
 	SDL_Rect        backdropSDLRect = { 0, 0, 640, 480 };
-	SDL_Rect        cursorBackSDLRect = { 0, 0, kCursorWidth, kCursorHeight };
 	SDL_Rect        destSDLRect;
 	MRect           drawRect[4], chunkRect, tempRect;
 	int             blob, count, oldGlow, splat, chunkType, selected;
@@ -150,8 +150,10 @@ void GameStartMenu( void )
     const int       kTitleGlowOff = useNewTitle? 150: 192;
     const bool      secretCreditsItem = !useNewTitle;
     
-	const int       kLeftSide = 0, kRightSide = 1, kGlow = 2, kCursor = 3;
-	
+	const int       kLeftSide = 0, kRightSide = 1, kGlow = 2;
+#if USE_CURSOR_SPRITE
+	const int       kCursor = 3;
+#endif
 	
 redo:
 	memcpy(titleItems, k_titleItemDefs, sizeof(titleItems));
@@ -799,23 +801,23 @@ void ResetWidescreenLayout()
 MBoolean InitCharacter( int player, int level )
 {
 	const Character characterList[] = {
-		{ -1 }, // no zero'th character
-		{ 0, 3, 1, { 8, 8, 8, 8, 8, 8 }, 13, 9, 0, 25,          { 0, _15TO8_8_8(0),     0, 0, _15TO8_8_8(0), 0 }, true },
-		{ 1, 6, 2, { 10, 9, 8, 8, 9, 10 }, 12, 7, 1, 20,        { 0, _15TO8_8_8(223),   7, 0, _15TO8_8_8(0), 0 }, true },
-		{ 2, 9, 3, { 7, 7, 7, 11, 7, 7 }, 10, 6, 2, 17,         { 0, _15TO8_8_8(0),     0, 0, _15TO8_8_8(0), 0 }, false },
-		{ 3, 12, 4, { 11, 10, 9, 8, 7, 6 }, 8, 5, 3, 13,        { 0, _15TO8_8_8(32767), 4, 0, _15TO8_8_8(16912), 4 }, false },
-		{ 4, 15, 0, { 5, 9, 10, 10, 9, 5 }, 7, 4, 4, 10,        { 0, _15TO8_8_8(32767), 1, 0, _15TO8_8_8(0), 0 }, false },
-		{ 5, 17, 1, { 4, 7, 11, 11, 6, 3 }, 7, 2, 5, 8,         { 0, _15TO8_8_8(14835), 8, 0, _15TO8_8_8(0), 0 }, false },
-		{ 6, 18, 2, { 7, 9, 10, 10, 9, 7 }, 6, 4, 6, 7,         { 0, _15TO8_8_8(0),     0, 0, _15TO8_8_8(0), 0 }, false },
-		{ 7, 20, 3, { 5, 10, 10, 10, 10, 5 }, 5, 3, 7, 5,       { 0, _15TO8_8_8(9696),  2, 0, _15TO8_8_8(21151), 3 }, false },
-		{ 8, 21, 4, { 11, 11, 10, 10, 9, 9 }, 4, 3, 8, 5,       { 0, _15TO8_8_8(32738), 5, 0, _15TO8_8_8(0), 0 }, false },
-		{ 9, 22, 0, { 11, 7, 11, 7, 11, 7 }, 3, 1, 9, 4,        { 0, _15TO8_8_8(32356), 5, 0, _15TO8_8_8(17392), 3 }, false },
-		{ 10, 23, 1, { 11, 11, 11, 11, 11, 11 }, 2, 1, 10, 2,   { 0, _15TO8_8_8(6337),  1, 0, _15TO8_8_8(0), 0 }, false },
-		{ 11, 24, 2, { 11, 11, 11, 11, 11, 11 }, 2, 1, 11, 2,   { 1, _15TO8_8_8(32767), 7, 0, _15TO8_8_8(0), 0 }, false },
-		{ -1 }, // skip
-		{ 13, 24, 1, { 11, 11, 11, 11, 11, 11 }, 10, 5, 0, 30,  { 0, _15TO8_8_8(0),     0, 0, _15TO8_8_8(0), 0 }, true }
+		{ .picture=-1 }, // no zero'th character
+		{  0,  3, 1, {  8,  8,  8,  8,  8,  8 }, 13, 9,  0, 25, {{ 0, _15TO8_8_8(    0), 0 }, { 0, _15TO8_8_8(    0), 0 }}, true },
+		{  1,  6, 2, { 10,  9,  8,  8,  9, 10 }, 12, 7,  1, 20, {{ 0, _15TO8_8_8(  223), 7 }, { 0, _15TO8_8_8(    0), 0 }}, true },
+		{  2,  9, 3, {  7,  7,  7, 11,  7,  7 }, 10, 6,  2, 17, {{ 0, _15TO8_8_8(    0), 0 }, { 0, _15TO8_8_8(    0), 0 }}, false },
+		{  3, 12, 4, { 11, 10,  9,  8,  7,  6 },  8, 5,  3, 13, {{ 0, _15TO8_8_8(32767), 4 }, { 0, _15TO8_8_8(16912), 4 }}, false },
+		{  4, 15, 0, {  5,  9, 10, 10,  9,  5 },  7, 4,  4, 10, {{ 0, _15TO8_8_8(32767), 1 }, { 0, _15TO8_8_8(    0), 0 }}, false },
+		{  5, 17, 1, {  4,  7, 11, 11,  6,  3 },  7, 2,  5,  8, {{ 0, _15TO8_8_8(14835), 8 }, { 0, _15TO8_8_8(    0), 0 }}, false },
+		{  6, 18, 2, {  7,  9, 10, 10,  9,  7 },  6, 4,  6,  7, {{ 0, _15TO8_8_8(    0), 0 }, { 0, _15TO8_8_8(    0), 0 }}, false },
+		{  7, 20, 3, {  5, 10, 10, 10, 10,  5 },  5, 3,  7,  5, {{ 0, _15TO8_8_8( 9696), 2 }, { 0, _15TO8_8_8(21151), 3 }}, false },
+		{  8, 21, 4, { 11, 11, 10, 10,  9,  9 },  4, 3,  8,  5, {{ 0, _15TO8_8_8(32738), 5 }, { 0, _15TO8_8_8(    0), 0 }}, false },
+		{  9, 22, 0, { 11,  7, 11,  7, 11,  7 },  3, 1,  9,  4, {{ 0, _15TO8_8_8(32356), 5 }, { 0, _15TO8_8_8(17392), 3 }}, false },
+		{ 10, 23, 1, { 11, 11, 11, 11, 11, 11 },  2, 1, 10,  2, {{ 0, _15TO8_8_8( 6337), 1 }, { 0, _15TO8_8_8(    0), 0 }}, false },
+		{ 11, 24, 2, { 11, 11, 11, 11, 11, 11 },  2, 1, 11,  2, {{ 1, _15TO8_8_8(32767), 7 }, { 0, _15TO8_8_8(    0), 0 }}, false },
+		{ .picture=-1 }, // skip
+		{ 13, 24, 1, { 11, 11, 11, 11, 11, 11 }, 10, 5,  0, 30, {{ 0, _15TO8_8_8(    0), 0 }, { 0, _15TO8_8_8(    0), 0 }}, true }
 	};
-		
+	
 	character[player] = characterList[level];
 	return (character[player].picture != -1);
 }

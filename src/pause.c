@@ -170,38 +170,38 @@ void SurfaceCurveEdges( SDL_Surface* edgeSurface, const MRect *rect )
 {
 	unsigned char* src[4];
 	int srcRowBytes, width, height, count;
-	char edgeMap[4][kEdgeSize][kEdgeSize+1]={  "      --",
+	char edgeMap[4][kEdgeSize][kEdgeSize+1]={{ "      --",
 					                           "    -...",
 					                           "   -.xxX",
 					                           "  -.xXXX",
 					                           " -.xXXXX",
 					                           " .xXXXXX",
 					                           "-.xXXXXX",
-					                           "-.XXXXXX",
-					                           "--      ",
+					                           "-.XXXXXX" },
+					                         { "--      ",
 					                           "...-    ",
 					                           "Xxx.-   ",
 					                           "XXXx.-  ",
 					                           "XXXXx.- ",
 					                           "XXXXXx. ",
 					                           "XXXXXx.-",
-					                           "XXXXXX.-",
-					                           "-.XXXXXX",
+					                           "XXXXXX.-" },
+					                         { "-.XXXXXX",
 					                           "-.xXXXXX",
 					                           " .xXXXXX",
 					                           " -.xXXXX",
 					                           "  -.xXXX",
 					                           "   -.xxX",
 					                           "    -...",
-					                           "      --",
-					                           "XXXXXX.-",
+					                           "      --" },
+					                         { "XXXXXX.-",
 					                           "XXXXXx.-",
 					                           "XXXXXx. ",
 					                           "XXXXx.- ",
 					                           "XXXx.-  ",
 					                           "Xxx.-   ",
 					                           "...-    ",
-					                           "--      "  };
+					                           "--      " } };
 	                         	                         
 	
 	src[0] = src[1] = src[2] = src[3] = (unsigned char*) edgeSurface->pixels;
@@ -804,6 +804,8 @@ static MBoolean GetClickedZone( int* item, SDL_Keycode inSDLKey, int numZones, c
 
 static MBoolean ContinueSelected( int *item, unsigned char inKey, SDL_Keycode inSDLKey )
 {
+	(void) inKey;
+
 	static const ClickableZone zones[] =
 	{
 		{ kContinue,	{280, 220, 300, 260} },
@@ -947,8 +949,8 @@ static MBoolean ControlsSelected( int *item, unsigned char inKey, SDL_Keycode in
 
 static MBoolean PauseSelected( int *item, unsigned char inKey, SDL_Keycode inSDLKey )
 {
-	(void) inSDLKey; // is unused
-	
+	(void) inKey;
+
 	static const ClickableZone zones[] = 
 	{	
 		{ kMusic,		{ 240, 180, 260, 320 } },		{ kResume,		{ 240, 340, 260, 480 } },
@@ -1028,7 +1030,7 @@ static MBoolean PauseSelected( int *item, unsigned char inKey, SDL_Keycode inSDL
 
 static MBoolean VideoSettingsSelected( int *item, unsigned char inKey, SDL_Keycode inSDLKey )
 {
-	(void) inSDLKey; // is unused
+	(void) inKey;
 	
 	static const ClickableZone zones[] = 
 	{	

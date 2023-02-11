@@ -659,7 +659,7 @@ void QuickFadeIn( MRGBColor *color )
 
     for( float percent=0.0f; percent<1.0f; percent += 0.04f )
     {
-        int c = MTickCount( );
+        MTicks c = MTickCount( );
         SDLU_SetBrightness( percent );
         while( c == MTickCount( ) )
         {
@@ -679,7 +679,7 @@ void QuickFadeOut( MRGBColor *color )
 
     for( float percent=1.0f; percent>0.0f; percent -= 0.04f )
     {
-        int c = MTickCount( );
+        MTicks c = MTickCount( );
         SDLU_SetBrightness( percent );
         while( c == MTickCount( ) )
         {
