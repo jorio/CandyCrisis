@@ -10,6 +10,10 @@ Get pre-built binaries here: https://github.com/jorio/CandyCrisis/releases
 
 See [BUILD.md](BUILD.md)
 
+## Packages
+
+[![Packaging status](https://repology.org/badge/vertical-allrepos/candycrisis.svg)](https://repology.org/project/candycrisis/versions)
+
 ## Credits/license
 
 - Original game: John Stiles
