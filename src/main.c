@@ -614,6 +614,12 @@ const char* QuickResourceName( const char* prefix, int id, const char* extension
 	return name;
 }
 
+static MBoolean CheckDataPath(void)
+{
+	const char* path = QuickResourceName("snd", 128, ".wav");
+	return FileExists(path);
+}
+
 void Initialize(void)
 {
 #if _WIN32
@@ -641,7 +647,32 @@ void Initialize(void)
 
 	snprintf(candyCrisisResources, sizeof(candyCrisisResources), "%s/Resources/", pathbuf);
 #else
-	snprintf(candyCrisisResources, sizeof(candyCrisisResources), "CandyCrisisResources/");
+	char* basePath = SDL_GetBasePath();
+
+	SDL_snprintf(candyCrisisResources, sizeof(candyCrisisResources), "CandyCrisisResources/");
+	if (CheckDataPath())
+	{
+		goto dataPathFound;
+	}
+
+	SDL_snprintf(candyCrisisResources, sizeof(candyCrisisResources), "%s../share/candycrisis/", basePath);
+	if (CheckDataPath())
+	{
+		goto dataPathFound;
+	}
+
+	SDL_snprintf(candyCrisisResources, sizeof(candyCrisisResources), "%s../share/CandyCrisis/", basePath);
+	if (CheckDataPath())
+	{
+		goto dataPathFound;
+	}
+
+	SDL_free(basePath);
+	Error("Couldn't find the CandyCrisisResources or share/candycrisis folder.");
+	return;
+
+dataPathFound:
+	SDL_free(basePath);
 #endif
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)

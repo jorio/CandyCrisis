@@ -2,8 +2,9 @@
 Type=Application
 Version=1.0
 Name=Candy Crisis
-Comment=Candy Crisis
-Icon=candycrisis-desktopicon
-Exec=CandyCrisis
+Comment=An exciting combination of pure action and puzzle gaming!
+Comment[fr]=Une combinaison palpitante d’action et de réflexion !
+Icon=candycrisis
+Exec=candycrisis
 Terminal=false
 Categories=Game;

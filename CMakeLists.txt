@@ -6,16 +6,20 @@ else()
 	cmake_minimum_required(VERSION 3.16)
 endif()
 
-set(GAME_TARGET "CandyCrisis")
+if(APPLE OR WIN32)
+	set(GAME_TARGET "CandyCrisis")
+else()
+	set(GAME_TARGET "candycrisis")
+endif()
 set(GAME_FRIENDLY_NAME "Candy Crisis")
 set(GAME_BUNDLE_ID "io.jor.candycrisis")
+set(GAME_DATA_DIR "CandyCrisisResources")
 set(GAME_MAC_COPYRIGHT "https://github.com/jorio/CandyCrisis")
 
 # Apply macOS deployment target and architectures to all subprojects
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum macOS deployment version")
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Target macOS architectures")
 
-set(CMAKE_CXX_STANDARD 20)
 if (${CMAKE_VERSION} VERSION_LESS "3.21")
 	set(CMAKE_C_STANDARD	11)
 else()
@@ -23,7 +27,7 @@ else()
 endif()
 
 project(${GAME_TARGET} LANGUAGES C
-	VERSION 3.0.0)
+	VERSION 3.0.1)
 
 # Create an option to switch between a system sdl library and a vendored sdl library
 option(BUILD_SDL_FROM_SOURCE "Build SDL from source" OFF)
@@ -97,7 +101,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/version.txt.in ${CMAKE_CURR
 # EXECUTABLE TARGET
 #------------------------------------------------------------------------------
 
-file(GLOB_RECURSE GAME_SOURCES CONFIGURE_DEPENDS ${GAME_SOURCE_DIR}/*.cpp ${GAME_SOURCE_DIR}/*.c ${GAME_SOURCE_DIR}/*.h)
+file(GLOB_RECURSE GAME_SOURCES CONFIGURE_DEPENDS ${GAME_SOURCE_DIR}/*.c ${GAME_SOURCE_DIR}/*.h)
 
 if(WIN32)
 	list(APPEND GAME_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/packaging/app.exe.rc)
@@ -206,6 +210,7 @@ else()
 	target_compile_options(${GAME_TARGET} PRIVATE
 		/W4
 		/wd5105 # see https://developercommunity.visualstudio.com/t/1249671
+		/we4013	# treat warning as error: undefined function (assuming extern returning int)
 		/MP		# multiprocessor build
 		/Zi		# output info to PDB
 	)
@@ -246,11 +251,11 @@ endif()
 if(APPLE)
 	set(GAME_DATA_TARGET_LOCATION "$<TARGET_FILE_DIR:${GAME_TARGET}>/../Resources")
 else()
-	set(GAME_DATA_TARGET_LOCATION "$<TARGET_FILE_DIR:${GAME_TARGET}>/CandyCrisisResources")
+	set(GAME_DATA_TARGET_LOCATION "$<TARGET_FILE_DIR:${GAME_TARGET}>/${GAME_DATA_DIR}")
 endif()
 
 add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/CandyCrisisResources" "${GAME_DATA_TARGET_LOCATION}")
+	COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/${GAME_DATA_DIR}" "${GAME_DATA_TARGET_LOCATION}")
 
 # Copy SDL2 DLL for convenience (WARNING: TARGET_RUNTIME_DLLS requires CMake 3.21, so this copy command was separated from the command above.)
 if(WIN32)
@@ -265,4 +270,11 @@ endif()
 # Install Windows-specific libraries (cmake --install): copy Visual Studio redistributable DLLs to install location
 if(WIN32)
 	include(InstallRequiredSystemLibraries)
+elseif(APPLE)
+	# no-op
+else()
+	install(TARGETS ${GAME_TARGET} DESTINATION bin)
+	install(FILES ${CMAKE_SOURCE_DIR}/packaging/${GAME_TARGET}.desktop DESTINATION share/applications/)
+	install(FILES ${CMAKE_SOURCE_DIR}/packaging/${GAME_TARGET}.png DESTINATION share/icons/hicolor/128x128/apps/)
+	install(DIRECTORY ${CMAKE_SOURCE_DIR}/${GAME_DATA_DIR}/ DESTINATION share/${GAME_TARGET}/)
 endif()
