@@ -729,13 +729,13 @@ void QuickFadeOut( MRGBColor *color )
 
 MBoolean FileExists( const char* name )
 {
-	FILE* f = fopen( name, "rb" );
+	SDL_RWops* f = SDL_RWFromFile( name, "rb" );
 	if( f == NULL )
 	{
 		return false;
 	}
 	
-	fclose( f );
+	SDL_RWclose( f );
 	return true;
 }
 

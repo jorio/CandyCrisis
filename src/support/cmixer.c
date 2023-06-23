@@ -32,7 +32,6 @@ IN THE SOFTWARE.
 #include <stdint.h>
 #include <stdbool.h>
 #include <limits.h>
-#include <stdio.h>
 
 #define MAX_CONCURRENT_VOICES 8
 #define BUFFER_SIZE 512
@@ -40,7 +39,7 @@ IN THE SOFTWARE.
 #define CM_DIE(message) \
 do { \
 	char buf[256]; \
-	snprintf(buf, sizeof(buf), "%s:%d: %s", __func__, __LINE__, (message)); \
+	SDL_snprintf(buf, sizeof(buf), "%s:%d: %s", __func__, __LINE__, (message)); \
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "cmixer", buf, NULL); \
 	abort(); \
 } while(0)
@@ -193,17 +192,17 @@ static inline double ClampDouble(double x, double a, double b) { return x < a ? 
 
 static char* LoadFile(const char* filename, size_t* outSize)
 {
-	FILE* ifs = fopen(filename, "rb");
+	SDL_RWops* ifs = SDL_RWFromFile(filename, "rb");
 	if (!ifs)
 		return NULL;
 
-	fseek(ifs, 0, SEEK_END);
-	long filesize = ftell(ifs);
-	fseek(ifs, 0, SEEK_SET);
+	SDL_RWseek(ifs, 0, RW_SEEK_END);
+	long filesize = SDL_RWtell(ifs);
+	SDL_RWseek(ifs, 0, RW_SEEK_SET);
 
 	void* bytes = SDL_malloc(filesize);
-	fread(bytes, 1, filesize, ifs);
-	fclose(ifs);
+	SDL_RWread(ifs, bytes, 1, filesize);
+	SDL_RWclose(ifs);
 
 	if (outSize)
 		*outSize = filesize;

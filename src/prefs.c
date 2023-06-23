@@ -1,8 +1,6 @@
 // prefs.c
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <SDL.h>
 
 #include "main.h"
 #include "prefs.h"
@@ -30,74 +28,79 @@ Preference prefList[] =
     { "CrispUpscaling",     &crispUpscaling,    sizeof(crispUpscaling   ) },
 };
 
-static FILE* GetPrefsStream(const char* openmode)
+static SDL_RWops* GetPrefsStream(const char* openmode)
 {
-    static char path[1024];
-    const char* userDir = SDL_GetPrefPath(NULL, "CandyCrisis");
-    snprintf(path, sizeof(path), "%sCandyCrisisPrefs.bin", userDir);
-    return fopen(path, openmode);
+	static char path[1024];
+	char* userDir = SDL_GetPrefPath(NULL, "CandyCrisis");
+	SDL_snprintf(path, sizeof(path), "%sCandyCrisisPrefs.bin", userDir);
+	SDL_free(userDir);
+	return SDL_RWFromFile(path, openmode);
 }
 
 void LoadPrefs()
 {
-    FILE* stream = GetPrefsStream("rb");
-    if (!stream)
-    {
-        return;
-    }
+	SDL_RWops* stream = GetPrefsStream("rb");
+	if (!stream)
+	{
+		return;
+	}
 
-    for (int i = 0; i < arrsize(prefList); i++)
-    {
-        Preference* pref = &prefList[i];
-        
-        fseek(stream, 0, SEEK_SET);
+	for (int i = 0; i < arrsize(prefList); i++)
+	{
+		Preference* pref = &prefList[i];
 
-        while (!feof(stream))
-        {
-            int keyLength;
-            char key[256];
-            unsigned int contentsLength;
+		SDL_RWseek(stream, 0, RW_SEEK_SET);
 
-            keyLength = fgetc(stream);
-            if (keyLength < 0 || feof(stream))
-                break;
-            fread(key, keyLength, 1, stream);
-            key[keyLength] = '\0';
-            fread(&contentsLength, sizeof(contentsLength), 1, stream);
+		while (1)
+		{
+			size_t numRead;
+			Uint8 keyLength;
+			char key[256];
+			unsigned int contentsLength;
 
-            if (!strncmp(key, pref->keyName, strlen(pref->keyName)))
-            {
-                if (contentsLength != pref->valueLength)
-                    break;
-                fread(pref->valuePtr, pref->valueLength, 1, stream);
-                break;
-            }
-            else
-            {
-                fseek(stream, contentsLength, SEEK_CUR);
-            }
-        }
-    }
+			numRead = SDL_RWread(stream, &keyLength, sizeof(keyLength), 1);
+			if (!numRead)
+				break;
+			SDL_RWread(stream, key, keyLength, 1);
+			key[keyLength] = '\0';
+			SDL_RWread(stream, &contentsLength, sizeof(contentsLength), 1);
 
-    fclose(stream);
+			if (!SDL_strncmp(key, pref->keyName, SDL_strlen(pref->keyName)))
+			{
+				if (contentsLength != pref->valueLength)
+					break;
+				SDL_RWread(stream, pref->valuePtr, pref->valueLength, 1);
+				break;
+			}
+			else
+			{
+				SDL_RWseek(stream, contentsLength, RW_SEEK_CUR);
+			}
+		}
+	}
+
+	SDL_RWclose(stream);
 }
 
 void SavePrefs()
 {
-    FILE* stream = GetPrefsStream("wb");
-    if (!stream)
-    {
-        return;
-    }
+	SDL_RWops* stream = GetPrefsStream("wb");
+	if (!stream)
+	{
+		return;
+	}
 
-    for (int i = 0; i < arrsize(prefList); i++)
-    {
-        const Preference* pref = &prefList[i];
-        fputc((uint8_t) strlen(pref->keyName), stream);
-        fwrite(pref->keyName, strlen(pref->keyName), 1, stream);
-        fwrite(&pref->valueLength, sizeof(pref->valueLength), 1, stream);
-        fwrite(pref->valuePtr, pref->valueLength, 1, stream);
-    }
-    
-    fclose(stream);
+	for (int i = 0; i < arrsize(prefList); i++)
+	{
+		const Preference* pref = &prefList[i];
+
+		Uint8 keyLength = SDL_strlen(pref->keyName);
+
+		SDL_RWwrite(stream, &keyLength, sizeof(keyLength), 1);
+		SDL_RWwrite(stream, pref->keyName, SDL_strlen(pref->keyName), 1);
+		SDL_RWwrite(stream, &pref->valueLength, sizeof(pref->valueLength), 1);
+		SDL_RWwrite(stream, pref->valuePtr, pref->valueLength, 1);
+	}
+
+	SDL_RWclose(stream);
 }
