@@ -2,8 +2,6 @@
 
 #include "SDLU.h"
 
-#include <stdio.h>
-
 #include "main.h"
 #include "players.h"
 #include "zap.h"
@@ -22,7 +20,6 @@
 
 #include <stdlib.h>
 #include <math.h>
-#include <stdio.h>
 
 signed char death[2][kGridAcross][kGridDown];
 int zapIteration[2];
@@ -52,7 +49,7 @@ void ZapScoreDisplay( int player, int amount, int multiplier, int x, int y, int 
 		zapScoreG[player] = glowColors[c][1];
 		zapScoreB[player] = glowColors[c][2];
 
-	    sprintf( zapScore[player], (multiplier == 1)? "%d": "%d*%d", amount, multiplier );
+		SDL_snprintf( zapScore[player], sizeof(zapScore[player]), (multiplier == 1)? "%d": "%d*%d", amount, multiplier );
 
 		zapScoreWidth[player] = 0;
 		scan = zapScore[player];

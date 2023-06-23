@@ -2,10 +2,6 @@
 
 #include "SDLU.h"
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "main.h"
 #include "gworld.h"
 #include "graphics.h"
@@ -210,8 +206,8 @@ void ShowHiscore( void )
 		// If the user holds delete while opening the high scores,
 		// clear the high score table.
 		
-		memcpy( &scores, &defaultScores, sizeof( scores ) );
-		memcpy( &best,   &defaultBest,   sizeof( best   ) );
+		SDL_memcpy( &scores, &defaultScores, sizeof( scores ) );
+		SDL_memcpy( &best,   &defaultBest,   sizeof( best   ) );
 	}
 	
 	hiScoreSurface = LoadPICTAsSurface( picBackdrop + (100 * RandomBefore(kLevels)), 32 );
@@ -273,7 +269,7 @@ void ShowHiscore( void )
 		
 		dPoint.h = 470;
 
-		stringLength = sprintf( myString, "%d", scores[count].score );
+		stringLength = SDL_snprintf( myString, sizeof(myString), "%d", scores[count].score );
 		for( length=0; length < stringLength; length++ )
 		{
 			SurfaceBlitCharacter( font, myString[length], &dPoint, r, g, b, 1 );
@@ -313,7 +309,7 @@ void SubmitCombo( Combo *in )
 	if( in->value > best.value && in->value > evenBetter.value )
 	{
 		PlayMono( kContinueSnd );
-		memcpy( &evenBetter, in, sizeof( Combo ) );
+		SDL_memcpy( &evenBetter, in, sizeof( Combo ) );
 	}	
 }
 
@@ -337,7 +333,7 @@ void ShowBestCombo( void )
 	levelCap = kLevels;
 	if( (level < 1 || level > levelCap) && level != kTutorialLevel ) 
 	{
-		memcpy( &best, &defaultBest, sizeof(best) );
+		SDL_memcpy( &best, &defaultBest, sizeof(best) );
 		showStartMenu = true;
 		return;
 	}
@@ -354,8 +350,8 @@ void ShowBestCombo( void )
 	{
 		SurfaceBlitCharacter( font, *scan, &dPoint, 255, 255, 255, 1 );
 	}
-		
-	sprintf( bestInfo, "%s (%d points)", best.name, best.value );
+
+	SDL_snprintf( bestInfo, sizeof(bestInfo), "%s (%d points)", best.name, best.value );
 
     font = GetFont(widescreen ? picFont : picHiScoreFont);
 	dPoint.v = widescreen? 388: 410;
@@ -368,7 +364,7 @@ void ShowBestCombo( void )
 
 	SDLU_ReleaseSurface( backdropSurface );
 	
-	memcpy( grid[0], best.grid, kGridAcross * kGridDown );
+	SDL_memcpy( grid[0], best.grid, kGridAcross * kGridDown );
 	ResolveSuction( 0 );
 	RedrawBoardContents( 0 );
 	RefreshAll( );
@@ -411,8 +407,8 @@ void AddHiscore( int score )
 		for( count=0; count<=9; count++ )
 		{
 			if( score >= scores[count].score )
-			{				
-				sprintf( rank, "%d points", score );
+			{
+				SDL_snprintf( rank, sizeof(rank), "%d points", score );
 				highScoreLevel = count;
 				break;
 			}
@@ -429,7 +425,7 @@ void AddHiscore( int score )
 	if( evenBetter.value > best.value && highScoreLevel != -1 )
 	{
 		
-		sprintf( text, "You got a high score and the best combo!" );
+		SDL_snprintf( text, sizeof(text), "You got a high score and the best combo!" );
 
 		highScoreText = text;
 		highScoreRank = rank;
@@ -440,8 +436,8 @@ void AddHiscore( int score )
 		{
 			highScoreName[kNameLength] = '\0';
 
-			memcpy( &best, &evenBetter, sizeof(Combo) );
-			strcpy( best.name, highScoreName );
+			SDL_memcpy( &best, &evenBetter, sizeof(Combo) );
+			SDL_strlcpy( best.name, highScoreName, sizeof(best.name) );
 
 			for( item=8; item>=highScoreLevel; item-- )
 			{
@@ -449,7 +445,7 @@ void AddHiscore( int score )
 			}
 			
 			scores[highScoreLevel].score = score;
-			strcpy( scores[highScoreLevel].name, highScoreName );				
+			SDL_strlcpy( scores[highScoreLevel].name, highScoreName, sizeof(scores[highScoreLevel].name) );
 		}
 	}
 	
@@ -457,7 +453,7 @@ void AddHiscore( int score )
 		
 	else if( evenBetter.value > best.value )
 	{
-		sprintf( text, "Congratulations! %s got best combo!", playerName );
+		SDL_snprintf( text, sizeof(text), "Congratulations! %s got best combo!", playerName );
 		
 		highScoreText = text;
 		highScoreRank = "";
@@ -468,8 +464,8 @@ void AddHiscore( int score )
 		{
 			highScoreName[kNameLength] = '\0';
 
-			memcpy( &best, &evenBetter, sizeof(Combo) );
-			strcpy( best.name, highScoreName );
+			SDL_memcpy( &best, &evenBetter, sizeof(Combo) );
+			SDL_strlcpy( best.name, highScoreName, sizeof(best.name) );
 		}
 	}
 
@@ -488,11 +484,11 @@ void AddHiscore( int score )
 
 			for( item=8; item>=highScoreLevel; item-- )
 			{
-				memmove( &scores[item+1], &scores[item], sizeof( HighScore ) );
+				SDL_memmove( &scores[item+1], &scores[item], sizeof( HighScore ) );
 			}
 			
 			scores[highScoreLevel].score = score;
-			strcpy( scores[highScoreLevel].name, highScoreName );				
+			SDL_strlcpy( scores[highScoreLevel].name, highScoreName, sizeof(scores[highScoreLevel].name) );
 		}
 	}
 }

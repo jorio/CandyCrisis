@@ -1,6 +1,5 @@
 // level.c
 
-#include <stdlib.h>
 #include <math.h>
 
 #include "SDLU.h"
@@ -156,7 +155,7 @@ void GameStartMenu( void )
 #endif
 	
 redo:
-	memcpy(titleItems, k_titleItemDefs, sizeof(titleItems));
+	SDL_memcpy(titleItems, k_titleItemDefs, sizeof(titleItems));
 
 	combo[0] = combo[1] = 0;
 	comboBright[0] = comboBright[1] = 0;
@@ -226,7 +225,7 @@ redo:
 			item->rect.left = dPoint.h;
 			item->rect.top = dPoint.v - 6;
 			item->rect.bottom = dPoint.v + 16 + 6;
-			int nameLength = (int) strlen(item->name);
+			int nameLength = (int) SDL_strlen(item->name);
 			for (int charNo = 0; charNo < nameLength; charNo++)
 			{
 				char c = item->name[charNo];
@@ -367,7 +366,7 @@ redo:
                 {
 				  char  number[16] = { 0 };
 				  char* scan;
-				  sprintf( number, "%d", combo[count] );
+				  SDL_snprintf( number, sizeof(number), "%d", combo[count] );
 
                   dPoint.v = meterRect[count].y + 3;
                   dPoint.h = meterRect[count].x;

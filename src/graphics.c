@@ -1,6 +1,5 @@
 // graphics.c
 
-#include <stdlib.h>
 #include "version.h"
 #include "SDLU.h"
 #include "main.h"

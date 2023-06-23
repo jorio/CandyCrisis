@@ -23,9 +23,6 @@
 #include "pause.h"
 #include "font.h"
 #include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 
 MTicks winTime, loseTime;
 int winStage, loseStage;
@@ -268,7 +265,7 @@ void DrawTimerCount( int player )
 		char seconds[20];
 		char *scan = seconds;
 		
-		sprintf( seconds, "%d", (endTime - startTime) / 60 );
+		SDL_snprintf( seconds, sizeof(seconds), "%d", (endTime - startTime) / 60 );
 		while( *scan )
 		{
 			SurfaceBlitCharacter( zapFont, *scan++, &dPoint, 255, 255, 255, 1  );
@@ -322,7 +319,7 @@ void DrawTimerBonus( int player )
 		char points[20];
 		char *scan = points;
 		
-		sprintf( points, "%d", bonus );
+		SDL_snprintf( points, sizeof(points), "%d", bonus );
 		while( *scan )
 		{
 			SurfaceBlitCharacter( zapFont, *scan++, &dPoint, 255, 255, 255, 1  );

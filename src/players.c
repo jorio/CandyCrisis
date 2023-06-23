@@ -23,9 +23,6 @@
 #include "score.h"
 #include "hiscore.h"
 
-#include <string.h>
-#include <stdlib.h>
-
 unsigned int  boredTime[2], hintTime[2], fadeCharTime[2], animTime[2], shadowDepth[2], hintGlow, messageTime;
 int emotions[2];
 int glowColors[][3] = { { 0,  0,  0},
@@ -833,7 +830,7 @@ void RetrieveBlobs( int player )
 	
 	if( control[player] == kPlayerControl )
 	{
-		memcpy( potentialCombo[player].grid, grid[player], kGridAcross * kGridDown );
+		SDL_memcpy( potentialCombo[player].grid, grid[player], kGridAcross * kGridDown );
 		potentialCombo[player].a = colorA[player];
 		potentialCombo[player].b = colorB[player];
 		potentialCombo[player].m = magic[player];

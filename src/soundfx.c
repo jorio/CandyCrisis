@@ -1,7 +1,6 @@
 // soundfx.c
 
 #include "support/cmixer.h"
-#include <stdio.h>
 
 #include "main.h"
 #include "soundfx.h"

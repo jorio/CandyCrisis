@@ -2,9 +2,6 @@
 
 #include "SDLU.h"
 
-#include <stdio.h>
-#include <string.h>
-
 #include "main.h"
 #include "score.h"
 #include "gworld.h"
@@ -95,7 +92,7 @@ void ShowScore( int player )
 	
 	if( control[player] != kNobodyControl )
 	{
-		sprintf( myString, "%d", displayedScore[player] );
+		SDL_snprintf( myString, sizeof(myString), "%d", displayedScore[player] );
 				
 		SDLU_AcquireSurface( scoreSurface );
 		
@@ -113,7 +110,7 @@ void ShowScore( int player )
 		myRect = scoreWindowZRect;
 		myRect.right -= 2;
 		myRect.left = myRect.right - kNumberHorizSize;
-		for( count = (int) strlen(myString) - 1; count >= 0; count-- )
+		for( count = (int) SDL_strlen(myString) - 1; count >= 0; count-- )
 		{
 			DrawCharacter( myString[count], &myRect );
 			OffsetMRect( &myRect, -kNumberHorizSize - 1, 0 );

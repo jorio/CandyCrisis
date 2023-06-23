@@ -250,10 +250,8 @@
 
 #include "main.h"
 
-#include <string.h>
 #include <limits.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 #include "hiscore.h"
 #include "control.h"
@@ -435,10 +433,10 @@ void Error( const char* extra )
 {
     char error[1024];
 
-    snprintf(error, sizeof(error),
+	SDL_snprintf(error, sizeof(error),
              "Sorry, a critical error has occurred. Please report the following error message:\n    %s", extra);
 
-    fprintf(stderr, "%s\n", error);
+//    fprintf(stderr, "%s\n", error);
 
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Candy Crisis", error, NULL);
 
@@ -604,11 +602,11 @@ const char* QuickResourceName( const char* prefix, int id, const char* extension
 	static char name[1024];
 	if (id)
 	{
-		snprintf( name, sizeof(name), "%s%s_%d%s", candyCrisisResources, prefix, id, extension );
+		SDL_snprintf( name, sizeof(name), "%s%s_%d%s", candyCrisisResources, prefix, id, extension );
 	}
 	else
 	{
-		snprintf( name, sizeof(name), "%s%s%s", candyCrisisResources, prefix, extension );
+		SDL_snprintf( name, sizeof(name), "%s%s%s", candyCrisisResources, prefix, extension );
 	}
 	
 	return name;
@@ -623,7 +621,7 @@ static MBoolean CheckDataPath(void)
 void Initialize(void)
 {
 #if _WIN32
-	snprintf(candyCrisisResources, sizeof(candyCrisisResources), "CandyCrisisResources\\");
+	SDL_snprintf(candyCrisisResources, sizeof(candyCrisisResources), "CandyCrisisResources\\");
 #elif __APPLE__
 	char pathbuf[PROC_PIDPATHINFO_MAXSIZE];
 
@@ -637,7 +635,7 @@ void Initialize(void)
 	// go up two levels
 	for (int i = 0; i < 2; i++)
 	{
-		char* slashPos = strrchr(pathbuf, '/');
+		char* slashPos = SDL_strrchr(pathbuf, '/');
 		if (!slashPos)
 		{
 			Error("can't find Resources folder");
@@ -645,7 +643,7 @@ void Initialize(void)
 		*slashPos = '\0';
 	}
 
-	snprintf(candyCrisisResources, sizeof(candyCrisisResources), "%s/Resources/", pathbuf);
+	SDL_snprintf(candyCrisisResources, sizeof(candyCrisisResources), "%s/Resources/", pathbuf);
 #else
 	char* basePath = SDL_GetBasePath();
 

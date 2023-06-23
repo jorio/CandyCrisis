@@ -16,9 +16,6 @@
 #include "opponent.h"
 #include "keyselect.h"
 
-#include <string.h>
-#include <stdio.h>
-
 AutoPattern tutorialPattern[] =
 {
 	{ kMessage,        0,   0,   "Welcome to the\nCandy Crisis\ntutorial!" },
@@ -392,18 +389,18 @@ void StartBalloon( const char *message )
 	SDL_Rect    balloonSDLRect, balloonContentsSDLRect;
 	MRect       balloonContentsRect;
 	
-	strcpy( balloonMsg, message );
+	SDL_strlcpy( balloonMsg, message, sizeof(balloonMsg) );
 	for( replace=0; replace<4; replace++ )
 	{
-		search = strstr( balloonMsg, match[replace] );
+		search = SDL_strstr( balloonMsg, match[replace] );
 		if( search )
 		{
 			char temp[256];
 			
 			search[0] = '%';
 			search[1] = 's';
-			sprintf( temp, balloonMsg, SDL_GetKeyName( playerKeys[1][replace] ) );
-			strcpy( balloonMsg, temp );
+			SDL_snprintf( temp, sizeof(temp), balloonMsg, SDL_GetKeyName( playerKeys[1][replace] ) );
+			SDL_strlcpy( balloonMsg, temp, sizeof(balloonMsg) );
 		}
 	}
 	

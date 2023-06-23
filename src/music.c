@@ -1,6 +1,5 @@
 // music.c
 
-#include <string.h>
 #include "main.h"
 #include "music.h"
 #include "gworld.h"

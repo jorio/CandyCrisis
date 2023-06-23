@@ -7,10 +7,6 @@
 #include "blitter.h"
 #include "graphics.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #define STBI_ONLY_JPEG
 #define STBI_ONLY_PNG
 #define STB_IMAGE_IMPLEMENTATION

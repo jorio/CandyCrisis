@@ -8,10 +8,6 @@
 #include "SDLU.h"
 
 #include <math.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <ctype.h>
 
 #include "main.h"
 #include "gameticks.h"
@@ -547,8 +543,8 @@ static void DrawContinueContents( int *item, int shade )
 	static int lastCountdown = 0;
 	int index, countdown, fade;
 	int r, g, b;
-	                 
-	sprintf( line[3], "%d credit%c", credits, (credits != 1)? 's': ' ' );
+
+	SDL_snprintf( line[3], sizeof(line[3]), "%d credit%c", credits, (credits != 1)? 's': ' ' );
 
 	SDLU_AcquireSurface( drawSurface );
 
@@ -644,7 +640,7 @@ static void DrawHiScoreContents( int *item, int shade )
 		SurfaceBlitCharacter( dashedLineFont, '.', &dashedLinePoint, 0, 0, 0, 0 );
 	}
 	
-	nameLength = (int) strlen(highScoreName);
+	nameLength = (int) SDL_strlen(highScoreName);
 	for( index = 0; index < nameLength; index++ )
 	{
 		SurfaceBlitCharacter( bigFont, highScoreName[index], &hPoint, 255, 255, 255, 1 );
@@ -830,7 +826,7 @@ static MBoolean ContinueSelected( int *item, unsigned char inKey, SDL_Keycode in
 
 static MBoolean HiScoreSelected( int *item, unsigned char inKey, SDL_Keycode inSDLKey )
 {
-	int nameLength = (int) strlen(highScoreName);
+	int nameLength = (int) SDL_strlen(highScoreName);
 	
 	// return (SDL key)
 	if( inSDLKey == SDLK_RETURN )
@@ -907,7 +903,7 @@ static MBoolean ControlsSelected( int *item, unsigned char inKey, SDL_Keycode in
 
 				case kControlsReset:
 					PlayMono(kClick);
-					memcpy(playerKeys, defaultPlayerKeys, sizeof(playerKeys));
+					SDL_memcpy(playerKeys, defaultPlayerKeys, sizeof(playerKeys));
 					break;
 			}
 		}
