@@ -10,7 +10,7 @@ Build recipe:
 git clone https://github.com/jorio/CandyCrisis
 cd CandyCrisis
 
-curl -LO https://github.com/libsdl-org/SDL/releases/download/release-2.26.3/SDL2-2.26.3.dmg
+curl -LO https://github.com/libsdl-org/SDL/releases/download/release-2.28.1/SDL2-2.28.1.dmg
 hdiutil attach SDL2-*.dmg
 cp -a /Volumes/SDL2/SDL2.framework SDL2.framework
 hdiutil detach /Volumes/SDL2
@@ -28,7 +28,7 @@ Build recipe (to run in PowerShell):
 git clone https://github.com/jorio/CandyCrisis
 cd CandyCrisis
 
-Invoke-WebRequest -OutFile SDL2-VC.zip -Uri https://github.com/libsdl-org/SDL/releases/download/release-2.26.3/SDL2-devel-2.26.3-VC.zip
+Invoke-WebRequest -OutFile SDL2-VC.zip -Uri https://github.com/libsdl-org/SDL/releases/download/release-2.28.1/SDL2-devel-2.28.1-VC.zip
 Expand-Archive SDL2-VC.zip
 move SDL2-VC/SDL2-* SDL2
 
@@ -53,7 +53,7 @@ Or, if you want to build SDL from source and link it statically:
 git clone https://github.com/jorio/CandyCrisis
 cd CandyCrisis
 
-git clone --depth 1 --branch release-2.26.3 https://github.com/libsdl-org/SDL
+git clone --depth 1 --branch release-2.28.1 https://github.com/libsdl-org/SDL
 
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SDL_FROM_SOURCE=1 -DSTATIC_SDL=1
 cmake --build build

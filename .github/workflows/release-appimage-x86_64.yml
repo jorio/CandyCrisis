@@ -3,7 +3,7 @@ name: Release AppImage x86_64
 on: [workflow_dispatch, workflow_call]
 
 env:
-  SDL2_VERSION: "2.26.3"
+  SDL2_VERSION: "2.28.1"
   APPIMAGETOOL_VERSION: "13"
   GAME_SHORTNAME: "candycrisis"
   GAME_LONGNAME: "Candy Crisis"
