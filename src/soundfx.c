@@ -40,17 +40,17 @@ void ShutdownSound()
     cmixer_ShutdownWithSDL();
 }
 
-void PlayMono( short which )
+void PlayMono( int which )
 {
     PlayStereoFrequency(2, which, 0);
 }
 
-void PlayStereo( short player, short which )
+void PlayStereo( int player, short which )
 {
     PlayStereoFrequency(player, which, 0);
 }
 
-void PlayStereoFrequency( short player, short which, short freq )
+void PlayStereoFrequency( int player, short which, short freq )
 {
     if (soundOn)
     {

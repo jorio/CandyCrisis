@@ -3,9 +3,9 @@
 
 void InitSound();
 void ShutdownSound();
-void PlayStereo( short player, short which );
-void PlayStereoFrequency( short player, short which, short freq );
-void PlayMono( short which );
+void PlayStereo( int player, short which );
+void PlayStereoFrequency( int player, short which, short freq );
+void PlayMono( int which );
 void UpdateSound();
 
 enum
