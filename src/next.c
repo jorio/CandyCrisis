@@ -71,9 +71,7 @@ void ShowPull( int player )
 	if( !nextWindowVisible[player] ) return;
 	
 	SDLU_AcquireSurface( nextDrawSurface );
-	
-	SDLU_BlitSurface( nextSurface,     &nextSurface->clip_rect,
-					  nextDrawSurface, &nextDrawSurface->clip_rect );
+	SDLU_BlitSurface1to1( nextSurface, nextDrawSurface );
 	
 	for( count=0; count<2; count++ )
 	{
@@ -177,9 +175,7 @@ void ShowNext( int player )
 	else
 	{
 		SDLU_AcquireSurface( nextDrawSurface );
-
-		SDLU_BlitSurface( nextSurface,     &nextSurface->clip_rect,
-						  nextDrawSurface, &nextDrawSurface->clip_rect );
+		SDLU_BlitSurface1to1( nextSurface, nextDrawSurface );
 				
 		nextFrame = nextG[player]? kNoSuction: jiggle[nextStage[player][0]];
 		

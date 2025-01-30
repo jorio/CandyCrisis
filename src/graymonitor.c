@@ -47,8 +47,9 @@ void ShowGrayMonitor( short player )
 	{
 		SDLU_AcquireSurface( smallGrayDrawSurface );
 		
-		SDLU_BlitSurface( boardSurface[player], &smallGrayDrawSurface->clip_rect,
-						  smallGrayDrawSurface, &smallGrayDrawSurface->clip_rect  );
+		SDL_GetSurfaceClipRect( smallGrayDrawSurface, &sourceSDLRect );
+		SDLU_BlitSurface( boardSurface[player], &sourceSDLRect,
+						  smallGrayDrawSurface, &sourceSDLRect  );
 	 				
 		monitor = unallocatedGrays[player];
 		

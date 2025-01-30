@@ -1,6 +1,6 @@
 // prefs.c
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include "main.h"
 #include "prefs.h"
@@ -28,18 +28,18 @@ Preference prefList[] =
     { "CrispUpscaling",     &crispUpscaling,    sizeof(crispUpscaling   ) },
 };
 
-static SDL_RWops* GetPrefsStream(const char* openmode)
+static SDL_IOStream* GetPrefsStream(const char* openmode)
 {
 	static char path[1024];
 	char* userDir = SDL_GetPrefPath(NULL, "CandyCrisis");
 	SDL_snprintf(path, sizeof(path), "%sCandyCrisisPrefs.bin", userDir);
 	SDL_free(userDir);
-	return SDL_RWFromFile(path, openmode);
+	return SDL_IOFromFile(path, openmode);
 }
 
 void LoadPrefs()
 {
-	SDL_RWops* stream = GetPrefsStream("rb");
+	SDL_IOStream* stream = GetPrefsStream("rb");
 	if (!stream)
 	{
 		return;
@@ -49,7 +49,7 @@ void LoadPrefs()
 	{
 		Preference* pref = &prefList[i];
 
-		SDL_RWseek(stream, 0, RW_SEEK_SET);
+		SDL_SeekIO(stream, 0, SDL_IO_SEEK_SET);
 
 		while (1)
 		{
@@ -58,33 +58,33 @@ void LoadPrefs()
 			char key[256];
 			unsigned int contentsLength;
 
-			numRead = SDL_RWread(stream, &keyLength, sizeof(keyLength), 1);
+			numRead = SDL_ReadIO(stream, &keyLength, sizeof(keyLength));
 			if (!numRead)
 				break;
-			SDL_RWread(stream, key, keyLength, 1);
+			SDL_ReadIO(stream, key, keyLength);
 			key[keyLength] = '\0';
-			SDL_RWread(stream, &contentsLength, sizeof(contentsLength), 1);
+			SDL_ReadIO(stream, &contentsLength, sizeof(contentsLength));
 
 			if (!SDL_strncmp(key, pref->keyName, SDL_strlen(pref->keyName)))
 			{
 				if (contentsLength != pref->valueLength)
 					break;
-				SDL_RWread(stream, pref->valuePtr, pref->valueLength, 1);
+				SDL_ReadIO(stream, pref->valuePtr, pref->valueLength);
 				break;
 			}
 			else
 			{
-				SDL_RWseek(stream, contentsLength, RW_SEEK_CUR);
+				SDL_SeekIO(stream, contentsLength, SDL_IO_SEEK_CUR);
 			}
 		}
 	}
 
-	SDL_RWclose(stream);
+	SDL_CloseIO(stream);
 }
 
 void SavePrefs()
 {
-	SDL_RWops* stream = GetPrefsStream("wb");
+	SDL_IOStream* stream = GetPrefsStream("wb");
 	if (!stream)
 	{
 		return;
@@ -96,11 +96,11 @@ void SavePrefs()
 
 		Uint8 keyLength = SDL_strlen(pref->keyName);
 
-		SDL_RWwrite(stream, &keyLength, sizeof(keyLength), 1);
-		SDL_RWwrite(stream, pref->keyName, SDL_strlen(pref->keyName), 1);
-		SDL_RWwrite(stream, &pref->valueLength, sizeof(pref->valueLength), 1);
-		SDL_RWwrite(stream, pref->valuePtr, pref->valueLength, 1);
+		SDL_WriteIO(stream, &keyLength, sizeof(keyLength));
+		SDL_WriteIO(stream, pref->keyName, SDL_strlen(pref->keyName));
+		SDL_WriteIO(stream, &pref->valueLength, sizeof(pref->valueLength));
+		SDL_WriteIO(stream, pref->valuePtr, pref->valueLength);
 	}
 
-	SDL_RWclose(stream);
+	SDL_CloseIO(stream);
 }

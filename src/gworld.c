@@ -37,7 +37,7 @@ void GetBlobGraphics()
 	boardSurface[1] = LoadPICTAsSurface( picBoardRight, 32 );
 	if( boardSurface[1] == NULL )
 		boardSurface[1] = LoadPICTAsSurface( picBoard, 32 );
-	
+
 	// Get blob worlds
 	blobSurface = LoadPICTAsSurface( picBlob, 32 );
 	maskSurface = LoadPICTAsSurface( picBlobMask, MASK_DEPTH );
@@ -216,7 +216,7 @@ SDL_Surface* LoadPICTAsSurface( int pictID, int depth )
     free(pixels);
     pixels = NULL;
 
-	if( depth != 0 )
+	if( depth != 0 && depth != 32 )
 	{
 		SDLU_ChangeSurfaceDepth( &surface, depth );
 	}
@@ -231,9 +231,7 @@ void DrawPICTInSurface( SDL_Surface* surface, int pictID )
 	image = LoadPICTAsSurface( pictID, 0 );
 	if( image != NULL )
 	{
-		SDLU_BlitSurface( image,    &image->clip_rect,
-		                  surface,  &surface->clip_rect );
-		                 
-		SDL_FreeSurface( image );
+		SDLU_BlitSurface1to1( image, surface );
+		SDL_DestroySurface( image );
 	}
 }

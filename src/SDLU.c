@@ -51,13 +51,13 @@ static MBoolean                s_interestedInTyping = false;
 static BufferedKey             s_keyBuffer[k_maxBufferedKeys];
 static int                     s_keyBufferSize = 0;
 
-int SDLUi_EventFilter(void* junk, SDL_Event *event)
+bool SDLUi_EventFilter(void* junk, SDL_Event *event)
 {
 	(void) junk;
 	
     switch (event->type)
     {
-        case SDL_TEXTINPUT:
+		case SDL_EVENT_TEXT_INPUT:
         {
             // Put text input into a buffer.
             if (s_interestedInTyping)
@@ -74,14 +74,14 @@ int SDLUi_EventFilter(void* junk, SDL_Event *event)
             break;
         }
     
-        case SDL_KEYDOWN:
+		case SDL_EVENT_KEY_DOWN:
         {
             // Put keydowns in a buffer
             if (s_interestedInTyping)
             {
                 BufferedKey key;
                 key.isASCII = false;
-                key.value.keycode = event->key.keysym.sym;
+				key.value.keycode = event->key.key;
                 s_keyBuffer[s_keyBufferSize] = key;
                 s_keyBufferSize = MinInt(k_maxBufferedKeys, s_keyBufferSize + 1);
             }
@@ -89,112 +89,108 @@ int SDLUi_EventFilter(void* junk, SDL_Event *event)
         }
     
         // Get mouse state
-        case SDL_MOUSEBUTTONDOWN:
+		case SDL_EVENT_MOUSE_BUTTON_DOWN:
         {
             if( event->button.button == SDL_BUTTON_LEFT )
                 s_mouseButton = true;
             
+			SDL_ConvertEventToRenderCoordinates(g_renderer, event);
             s_mousePosition.v = event->button.y;
             s_mousePosition.h = event->button.x;
             break;
         }
-    
-        case SDL_MOUSEBUTTONUP:
+
+		case SDL_EVENT_MOUSE_BUTTON_UP:
         {
             if( event->button.button == SDL_BUTTON_LEFT )
                 s_mouseButton = false;
             
+			SDL_ConvertEventToRenderCoordinates(g_renderer, event);
             s_mousePosition.v = event->button.y;
             s_mousePosition.h = event->button.x;
             break;
         }
-    
-        case SDL_MOUSEMOTION:
+
+		case SDL_EVENT_MOUSE_MOTION:
         {
+			SDL_ConvertEventToRenderCoordinates(g_renderer, event);
             s_mousePosition.v = event->motion.y;
             s_mousePosition.h = event->motion.x;
-            s_mouseButton = event->motion.state & SDL_BUTTON(1);
+            s_mouseButton = event->motion.state & SDL_BUTTON_LMASK;
             break;
         }
-    
-        case SDL_QUIT:
+
+		case SDL_EVENT_QUIT:
         {
             finished = true;
             break;
         }
-            
-        case SDL_WINDOWEVENT:
-        {
-            if (event->window.event == SDL_WINDOWEVENT_FOCUS_LOST && s_isForeground)
-            {
-                FreezeGameTickCount();
-                //EnableMusic(false);
-                s_isForeground = false;
-            }
-            else if (event->window.event == SDL_WINDOWEVENT_FOCUS_GAINED && !s_isForeground)
-            {
-                UnfreezeGameTickCount();
-                //EnableMusic(musicOn);
-                s_isForeground = true;
-                
-                DoFullRepaint();
-            }
-            else if (event->window.event == SDL_WINDOWEVENT_RESIZED)
-            {
-                SDLU_CreateRendererTexture();
-            }
-            break;
-        }
-    }
-    
-    return 1;
+
+		case SDL_EVENT_WINDOW_FOCUS_LOST:
+			if (s_isForeground)
+			{
+				FreezeGameTickCount();
+				//EnableMusic(false);
+				s_isForeground = false;
+			}
+			break;
+		
+		case SDL_EVENT_WINDOW_FOCUS_GAINED:
+			if (!s_isForeground)
+			{
+				UnfreezeGameTickCount();
+				//EnableMusic(musicOn);
+				s_isForeground = true;
+				
+				DoFullRepaint();
+			}
+			break;
+		
+		case SDL_EVENT_WINDOW_RESIZED:
+		{
+			SDLU_CreateRendererTexture();
+			break;
+		}
+	}
+
+	return true;
 }
 
 
 void SDLU_CreateRendererTexture()
 {
-    if (!g_renderer)
-        return;
+	if (!g_renderer)
+		return;
+	
+	int logicalWidth = 640;
+	int logicalHeight = widescreen ? 360 : 480;
+	
+	SDL_RendererLogicalPresentation logicalPresentation = SDL_LOGICAL_PRESENTATION_LETTERBOX;
+	SDL_ScaleMode scaleMode = SDL_SCALEMODE_LINEAR;
+	
+	if (crispUpscaling)
+	{
+		int currentWidth = 0;
+		int currentHeight = 0;
+		SDL_GetWindowSizeInPixels(g_window, &currentWidth, &currentHeight);
+		
+		if (currentWidth >= logicalWidth && currentHeight >= logicalHeight)
+		{
+			logicalPresentation = SDL_LOGICAL_PRESENTATION_INTEGER_SCALE;
+			scaleMode = SDL_SCALEMODE_NEAREST;
+		}
+	}
 
-    if (!crispUpscaling)
-    {
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
-        SDL_RenderSetIntegerScale(g_renderer, SDL_FALSE);
-    }
-    else
-    {
-        int minWidth = 640;
-        int minHeight = widescreen ? 360 : 480;
+	if (g_windowTexture)
+		SDL_DestroyTexture(g_windowTexture);
 
-        int currentWidth = 0;
-        int currentHeight = 0;
-#if SDL_VERSION_ATLEAST(2,26,0)
-        SDL_GetWindowSizeInPixels(g_window, &currentWidth, &currentHeight);
-#else
-        SDL_GetWindowSize(g_window, &currentWidth, &currentHeight);
-#endif
+	g_windowTexture = SDL_CreateTexture(g_renderer,
+		SDL_PIXELFORMAT_XRGB8888,
+		SDL_TEXTUREACCESS_STREAMING,
+		640, 480);
 
-        if (currentWidth < minWidth || currentHeight < minHeight)
-        {
-            SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
-            SDL_RenderSetIntegerScale(g_renderer, SDL_FALSE);
-        }
-        else
-        {
-            SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
-            SDL_RenderSetIntegerScale(g_renderer, SDL_TRUE);
-        }
-    }
-
-    if (g_windowTexture)
-        SDL_DestroyTexture(g_windowTexture);
-
-    g_windowTexture = SDL_CreateTexture(g_renderer,
-        SDL_PIXELFORMAT_RGB888,
-        SDL_TEXTUREACCESS_STREAMING,
-        640, 480);
-
-    SDL_RenderSetLogicalSize(g_renderer, 640, widescreen ? 360: 480);
+	SDL_SetTextureScaleMode(g_windowTexture, scaleMode);
+	SDL_SetRenderLogicalPresentation(g_renderer, logicalWidth, logicalHeight, logicalPresentation);
 }
 
 
@@ -211,12 +207,13 @@ void SDLU_Init()
         grayscaleColors[index].b = 255 - index;
         grayscaleColors[index].a = 255;
     }
-    
-    s_grayscalePalette = SDL_AllocPalette(256);
-    SDL_SetPaletteColors(s_grayscalePalette, grayscaleColors, 0, arrsize(grayscaleColors));
 
-    s_standardCursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
-    s_handCursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
+    s_grayscalePalette = SDL_CreatePalette(256);
+    bool ok = SDL_SetPaletteColors(s_grayscalePalette, grayscaleColors, 0, arrsize(grayscaleColors));
+	SDL_assert(ok);
+
+    s_standardCursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT);
+    s_handCursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_POINTER);
 }
 
 
@@ -249,9 +246,17 @@ MRect* SDLU_SDLRectToMRect( const SDL_Rect* in, MRect* out )
 int SDLU_BlitSurface( SDL_Surface* src, SDL_Rect* srcrect,
 			          SDL_Surface* dst, SDL_Rect* dstrect  )
 {
-	// Let SDL handle this.
-	return SDL_BlitSurface( src, srcrect,
-	                        dst, dstrect  );
+	return SDL_BlitSurface( src, srcrect, dst, dstrect );
+}
+
+
+int SDLU_BlitSurface1to1( SDL_Surface* src, SDL_Surface* dst )
+{
+	SDL_Rect srcrect, dstrect;
+	SDL_GetSurfaceClipRect( src, &srcrect );
+	SDL_GetSurfaceClipRect( dst, &dstrect );
+	return SDL_BlitSurface( src, &srcrect,
+							dst, &dstrect  );
 }
 
 
@@ -260,13 +265,13 @@ void SDLU_GetPixel(	SDL_Surface* surface, int x, int y, SDL_Color* pixel )
 	unsigned int   px;
 	unsigned char* ptr;
 	
-	switch( surface->format->BytesPerPixel )
+	switch( SDL_BYTESPERPIXEL(surface->format) )
 	{
 		case 1:
 			ptr = (unsigned char*)surface->pixels + (y * surface->pitch) + (x);
 			px = *(unsigned char*) ptr;
 			break;
-		
+
 		case 2:
 			ptr = (unsigned char*)surface->pixels + (y * surface->pitch) + (x * 2);
 			px = *(unsigned short*) ptr;
@@ -276,26 +281,29 @@ void SDLU_GetPixel(	SDL_Surface* surface, int x, int y, SDL_Color* pixel )
 			ptr = (unsigned char*)surface->pixels + (y * surface->pitch) + (x * 4);
 			px = *(unsigned int *) ptr;
 			break;
-        
+
         default:
             Error("SDLU_GetPixel: unrecognized surface format");
             return;
 	}
 	
-	return SDL_GetRGB( px, surface->format, &pixel->r, &pixel->g, &pixel->b );
+	SDL_GetRGB( px, SDL_GetPixelFormatDetails(surface->format), SDL_GetSurfacePalette(surface), &pixel->r, &pixel->g, &pixel->b );
 }
 
 
 void SDLU_ChangeSurfaceDepth( SDL_Surface** surface, int depth )
 {
+	SDL_Surface* oldSurface = *surface;
 	SDL_Surface* newSurface;
-
-	newSurface = SDLU_InitSurface( &surface[0]->clip_rect, depth );
+	SDL_Rect clipRect;
 	
-	SDLU_BlitSurface( *surface,    &surface[0]->clip_rect,
-	                   newSurface, &newSurface->clip_rect  );
-			
-	SDL_FreeSurface( *surface );
+	SDL_GetSurfaceClipRect( oldSurface, &clipRect );
+
+	newSurface = SDLU_InitSurface( &clipRect, depth );
+	
+	SDLU_BlitSurface1to1( oldSurface, newSurface );
+
+	SDL_DestroySurface( oldSurface );
 	
 	*surface = newSurface;
 }
@@ -304,29 +312,21 @@ void SDLU_ChangeSurfaceDepth( SDL_Surface** surface, int depth )
 SDL_Surface* SDLU_InitSurface( SDL_Rect* rect, int depth )
 {
 	SDL_Surface*            surface = NULL;
+	bool ok = true;
 	
 	switch( depth )
 	{
-        case 32:
-            surface = SDL_CreateRGBSurface(
-                            SDL_SWSURFACE,
-                            rect->w,
-                            rect->h, 
-                            32,
-                            RED_MASK, GREEN_MASK, BLUE_MASK, 0);
-            break;
-          
-		case 8:
-			surface = SDL_CreateRGBSurface( 
-							SDL_SWSURFACE, 
-							rect->w, 
-							rect->h, 
-							8, 
-							0, 0, 0, 0 );
-
-            SDL_SetSurfacePalette(surface, s_grayscalePalette);
+		case 32:
+			surface = SDL_CreateSurface(rect->w, rect->h, SDL_PIXELFORMAT_XRGB8888);
 			break;
-            
+
+		case 8:
+			surface = SDL_CreateSurface(rect->w, rect->h, SDL_PIXELFORMAT_INDEX8);
+			SDL_assert(surface);
+			ok = SDL_SetSurfacePalette(surface, s_grayscalePalette);
+			SDL_assert(ok);
+			break;
+
         default:
             Error("SDLU_InitSurface: invalid depth");
             return NULL;
@@ -340,7 +340,10 @@ SDL_Surface* SDLU_InitSurface( SDL_Rect* rect, int depth )
 	
 	// SDL_FillRect only works on 8-bit or higher surfaces.
 	if( depth >= 8 )
-		SDL_FillRect( surface, rect, SDL_MapRGB( surface->format, 0xFF, 0xFF, 0xFF ) );
+	{
+		ok = SDL_FillSurfaceRect( surface, rect, SDL_MapSurfaceRGB( surface, 0xFF, 0xFF, 0xFF ) );
+		SDL_assert(ok);
+	}
 	
 	return surface;
 }
@@ -388,12 +391,14 @@ void SDLU_StartWatchingTyping()
 {
 	s_interestedInTyping = true;
     s_keyBufferSize = 0;  // clear keybuffer
+	SDL_StartTextInput(g_window);
 }
 
 
 void SDLU_StopWatchingTyping()
 {
 	s_interestedInTyping = false;
+	SDL_StopTextInput(g_window);
 }
 
 
@@ -431,53 +436,15 @@ MBoolean SDLU_CheckSDLTyping(SDL_Keycode* sdlKey)
 }
 
 
-static MPoint SDLUi_TranslatePointFromWindowToFrontSurface(MPoint pt)
-{
-	// On macOS, the mouse position is relative to the window's "point size" on Retina screens.
-	int windowPointW = 1;
-	int windowPointH = 1;
-	int windowPixelW = 1;
-	int windowPixelH = 1;
-
-	SDL_GetWindowSize(g_window, &windowPointW, &windowPointH);
-#if SDL_VERSION_ATLEAST(2,26,0)
-	SDL_GetWindowSizeInPixels(g_window, &windowPixelW, &windowPixelH);
-#else
-	// Backwards compat with old versions of SDL
-	windowPixelW = windowPointW;
-	windowPixelH = windowPointH;
-#endif
-
-	if (windowPointW != windowPixelW || windowPointH != windowPixelH)
-	{
-		float dpiScaleX = (float) windowPixelW / (float) windowPointW;		// gGameWindowWidth is in actual pixels
-		float dpiScaleY = (float) windowPixelH / (float) windowPointH;		// gGameWindowHeight is in actual pixels
-		pt.h *= dpiScaleX;
-		pt.v *= dpiScaleY;
-	}
-
-    SDL_Rect viewport;
-    float scaleX, scaleY;
-    SDL_RenderGetViewport(g_renderer, &viewport);
-    SDL_RenderGetScale(g_renderer, &scaleX, &scaleY);
-
-    pt.h = pt.h / scaleX - viewport.x;
-    pt.v = pt.v / scaleY - viewport.y;
-
-    if (widescreen)
-    {
-        pt.h += g_widescreenCrop.x;
-        pt.v += g_widescreenCrop.y;
-    }
-
-    return pt;
-}
-
-
 void SDLU_GetMouse( MPoint* pt )
 {
 	SDLU_PumpEvents();
-	*pt = SDLUi_TranslatePointFromWindowToFrontSurface(s_mousePosition);
+	*pt = s_mousePosition;
+	if (widescreen)
+	{
+		pt->h += g_widescreenCrop.x;
+		pt->v += g_widescreenCrop.y;
+	}
 }
 
 
@@ -522,7 +489,8 @@ void SDLU_Present()
     SDL_UpdateTexture(g_windowTexture, NULL, g_frontSurface->pixels, g_frontSurface->pitch);
     SDL_RenderClear(g_renderer);
     
-    SDL_RenderCopy(g_renderer, g_windowTexture, widescreen ? &g_widescreenCrop : NULL, NULL);
+	SDL_FRect wsc = {.x=g_widescreenCrop.x, .y=g_widescreenCrop.y, .w=g_widescreenCrop.w, .h=g_widescreenCrop.h};
+	SDL_RenderTexture(g_renderer, g_windowTexture, widescreen ? &wsc : NULL, NULL);
 
     if (s_fadeGamma < 1.0)
     {
@@ -557,23 +525,23 @@ void SDLU_Present()
 void SDLU_SetSystemCursor(int which)
 {
 #if USE_CURSOR_SPRITE
-    SDL_ShowCursor(SDL_DISABLE);
+	SDL_HideCursor();
 #else
     switch (which)
     {
         case SYSTEM_CURSOR_OFF:
-            SDL_ShowCursor(SDL_DISABLE);
+			SDL_HideCursor();
             SDL_SetCursor(s_standardCursor);
             break;
 
         case SYSTEM_CURSOR_ARROW:
             SDL_SetCursor(s_standardCursor);
-            SDL_ShowCursor(SDL_ENABLE);
+			SDL_ShowCursor();
             break;
 
         case SYSTEM_CURSOR_HAND:
             SDL_SetCursor(s_handCursor);
-            SDL_ShowCursor(SDL_ENABLE);
+			SDL_ShowCursor();
             break;
     }
 #endif

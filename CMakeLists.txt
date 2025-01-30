@@ -1,10 +1,4 @@
-if(APPLE OR WIN32)
-	cmake_minimum_required(VERSION 3.21)
-else()
-	# Oldest supported Ubuntu is 20.04, which ships with cmake 3.16.
-	# When we can stop supporting Ubuntu 20.04, bump to CMake 3.21.
-	cmake_minimum_required(VERSION 3.16)
-endif()
+cmake_minimum_required(VERSION 3.21)
 
 if(APPLE OR WIN32)
 	set(GAME_TARGET "CandyCrisis")
@@ -17,21 +11,17 @@ set(GAME_DATA_DIR "CandyCrisisResources")
 set(GAME_MAC_COPYRIGHT "https://github.com/jorio/CandyCrisis")
 
 # Apply macOS deployment target and architectures to all subprojects
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum macOS deployment version")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum macOS deployment version")  # Keep in sync with SDL3's Info.plist
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Target macOS architectures")
 
-if (${CMAKE_VERSION} VERSION_LESS "3.21")
-	set(CMAKE_C_STANDARD	11)
-else()
-	set(CMAKE_C_STANDARD	17)
-endif()
+set(CMAKE_C_STANDARD	17)
 
 project(${GAME_TARGET} LANGUAGES C
-	VERSION 3.0.1)
+	VERSION 3.0.2)
 
 # Create an option to switch between a system sdl library and a vendored sdl library
 option(BUILD_SDL_FROM_SOURCE "Build SDL from source" OFF)
-option(STATIC_SDL "Static link SDL" OFF)
+option(SDL_STATIC "Static link SDL" OFF)
 option(SANITIZE "Build with asan/ubsan" OFF)
 set(CODE_SIGN_IDENTITY "" CACHE STRING "macOS code signing identity. If omitted, the app won't be signed.")
 
@@ -52,37 +42,31 @@ set(GAME_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 # FIND SDL
 #------------------------------------------------------------------------------
 
-# If SDL2_DIR wasn't specified, discover if the user put some prebuilt SDL2 package in the project's root directory
-if(NOT DEFINED SDL2_DIR)
+# If SDL3_DIR wasn't specified, discover if the user put some prebuilt SDL3 package in the project's root directory
+if(NOT DEFINED SDL3_DIR)
 	if(APPLE)
-		set(_sdl2_maybe "${CMAKE_SOURCE_DIR}/SDL2.framework/Resources/CMake")
+		set(_sdl3_maybe "${CMAKE_SOURCE_DIR}/SDL3.framework/Resources/CMake")
 	elseif(WIN32)
-		set(_sdl2_maybe "${CMAKE_SOURCE_DIR}/SDL2/cmake")
+		set(_sdl3_maybe "${CMAKE_SOURCE_DIR}/SDL3/cmake")
 	endif()
 
-	if(DEFINED _sdl2_maybe AND EXISTS "${_sdl2_maybe}")
-		set(SDL2_DIR "${_sdl2_maybe}")
+	if(DEFINED _sdl3_maybe AND EXISTS "${_sdl3_maybe}")
+		set(SDL3_DIR "${_sdl3_maybe}")
 	else()
-		message("Couldn't find prebuilt SDL2 package in: ${_sdl2_maybe}")
+		message("Couldn't find pre-built SDL3 package in: ${_sdl3_maybe}")
 	endif()
-	unset(_sdl2_maybe)
+	unset(_sdl3_maybe)
 endif()
 
 if(NOT BUILD_SDL_FROM_SOURCE)
-	# 1. Look for an SDL2 package, 2. look for the SDL2 component and 3. fail if none can be found
-	find_package(SDL2 CONFIG REQUIRED COMPONENTS SDL2)
-
-	# 1. Look for an SDL2 package, 2. Look for the SDL2maincomponent and 3. DO NOT fail when SDL2main is not available 
-	find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
-
-	message("Found pre-built SDL: " ${SDL2_PREFIX})
+	find_package(SDL3 CONFIG REQUIRED)
+	message("Found pre-built SDL3")
 else()
-	if(NOT DEFINED SDL2_DIR)
-		set(SDL2_DIR "${CMAKE_SOURCE_DIR}/SDL")
+	if(NOT DEFINED SDL3_DIR)
+		set(SDL3_DIR "${CMAKE_SOURCE_DIR}/SDL")
 	endif()
-	
-	message("Building SDL from source: " ${SDL2_DIR})
-	add_subdirectory("${SDL2_DIR}" EXCLUDE_FROM_ALL)
+	message("Building SDL3 from source: " ${SDL3_DIR})
+	add_subdirectory("${SDL3_DIR}" EXCLUDE_FROM_ALL)
 endif()
 
 #------------------------------------------------------------------------------
@@ -144,7 +128,7 @@ set_target_properties(${GAME_TARGET} PROPERTIES
 	MACOSX_BUNDLE_BUNDLE_NAME			"${GAME_FRIENDLY_NAME}"	# CFBundleName - user-visible short name for the bundle
 	MACOSX_BUNDLE_GUI_IDENTIFIER		"${GAME_BUNDLE_ID}"		# CFBundleIdentifier - unique bundle ID in reverse-DNS format
 
-	# Set framework search path to (App bundle)/Contents/Frameworks so the game can use its embedded SDL2.framework
+	# Set framework search path to (App bundle)/Contents/Frameworks so the game can use its embedded SDL3.framework
 	XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks"
 
 	# If CODE_SIGN_IDENTITY is NOT empty: tell Xcode to codesign the app properly
@@ -158,7 +142,7 @@ set_target_properties(${GAME_TARGET} PROPERTIES
 	# Don't bother with universal builds when we're working on the debug version
 	XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH[variant=Debug] "YES"
 
-	XCODE_EMBED_FRAMEWORKS							"${SDL2_FRAMEWORK_PATH}"
+	XCODE_EMBED_FRAMEWORKS							"SDL3.framework"
 	XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY		"YES"		# frameworks must be signed by the same developer as the binary
 	XCODE_EMBED_FRAMEWORKS_REMOVE_HEADERS_ON_COPY	"YES"		# not strictly necessary, but that's cleaner
 	XCODE_ATTRIBUTE_COPY_PHASE_STRIP[variant=Debug]	"NO"		# avoid "skipping copy phase strip" warning while working on Debug config
@@ -232,16 +216,10 @@ if(NOT APPLE AND NOT WIN32)
 	target_link_libraries(${GAME_TARGET} PRIVATE m)
 endif()
 
-# SDL2::SDL2main may or may not be available. It is e.g. required by Windows GUI applications  
-if(TARGET SDL2::SDL2main)
-	# It has an implicit dependency on SDL2 functions, so it MUST be added before SDL2::SDL2 (or SDL2::SDL2-static)
-	target_link_libraries(${GAME_TARGET} PRIVATE SDL2::SDL2main)
-endif()
-
-if(NOT STATIC_SDL)
-	target_link_libraries(${GAME_TARGET} PRIVATE SDL2::SDL2)
+if(NOT SDL_STATIC)
+	target_link_libraries(${GAME_TARGET} PRIVATE SDL3::SDL3)
 else()
-	target_link_libraries(${GAME_TARGET} PRIVATE SDL2::SDL2-static)
+	target_link_libraries(${GAME_TARGET} PRIVATE SDL3::SDL3-static)
 endif()
 
 #------------------------------------------------------------------------------
@@ -257,7 +235,7 @@ endif()
 add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/${GAME_DATA_DIR}" "${GAME_DATA_TARGET_LOCATION}")
 
-# Copy SDL2 DLL for convenience (WARNING: TARGET_RUNTIME_DLLS requires CMake 3.21, so this copy command was separated from the command above.)
+# Copy SDL3 DLL for convenience (WARNING: TARGET_RUNTIME_DLLS requires CMake 3.21, so this copy command was separated from the command above.)
 if(WIN32)
 	add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:${GAME_TARGET}> $<TARGET_FILE_DIR:${GAME_TARGET}>)

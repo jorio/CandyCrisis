@@ -28,8 +28,9 @@ IN THE SOFTWARE.
 #include "cmixer.h"
 #include "ibxm.h"
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <limits.h>
 
@@ -192,17 +193,17 @@ static inline double ClampDouble(double x, double a, double b) { return x < a ? 
 
 static char* LoadFile(const char* filename, size_t* outSize)
 {
-	SDL_RWops* ifs = SDL_RWFromFile(filename, "rb");
+	SDL_IOStream* ifs = SDL_IOFromFile(filename, "rb");
 	if (!ifs)
 		return NULL;
 
-	SDL_RWseek(ifs, 0, RW_SEEK_END);
-	long filesize = SDL_RWtell(ifs);
-	SDL_RWseek(ifs, 0, RW_SEEK_SET);
+	SDL_SeekIO(ifs, 0, SDL_IO_SEEK_END);
+	long filesize = SDL_TellIO(ifs);
+	SDL_SeekIO(ifs, 0, SDL_IO_SEEK_SET);
 
 	void* bytes = SDL_malloc(filesize);
-	SDL_RWread(ifs, bytes, 1, filesize);
-	SDL_RWclose(ifs);
+	SDL_ReadIO(ifs, bytes, filesize);
+	SDL_CloseIO(ifs);
 
 	if (outSize)
 		*outSize = filesize;
@@ -222,15 +223,16 @@ static uint8_t BuildPCMFormat(int bitdepth, int channels, bool bigEndian)
 
 static struct Mixer
 {
-	SDL_mutex* sdlAudioMutex;
+	SDL_Mutex* sdlAudioMutex;
 	CMVoice* voices[MAX_CONCURRENT_VOICES];	// List of active (playing) voices
 	int32_t pcmmixbuf[BUFFER_SIZE];			// Internal master buffer
+	int16_t pcmclipbuf[BUFFER_SIZE];		// Internal clip buffer
 	int samplerate;							// Master samplerate
 	int gain;								// Master gain (fixed point)
 } gMixer;
 
 static void Mixer_Init(struct Mixer* mixer, int samplerate);
-static void Mixer_Process(struct Mixer* mixer, int16_t* dst, int len);
+static void SDLCALL Mixer_Callback(void* opaqueMixer, SDL_AudioStream* stream, int additionalAmount, int totalAmount);
 static void Mixer_Lock(struct Mixer* mixer);
 static void Mixer_Unlock(struct Mixer* mixer);
 static void Mixer_SetMasterGain(struct Mixer* mixer, double newGain);
@@ -241,43 +243,51 @@ static void Mixer_SetMasterGain(struct Mixer* mixer, double newGain);
 static bool sdlAudioSubSystemInited = false;
 static SDL_AudioDeviceID sdlDeviceID = 0;
 
-static void MixerCallback(void* udata, Uint8* stream, int size)
+// SDL2 used to offer SDL_AUDIO_ALLOW_FREQUENCY_CHANGE to avoid crackles and
+// pops if the hardware doesn't work at the exact frequency we've asked for
+// (typically we'd ask for 44100 and get back 48000).
+// I couldn't find an equivalent to SDL_AUDIO_ALLOW_FREQUENCY_CHANGE in SDL3.
+// So, use this function before opening the audio device to query the hardware
+// for its preferred frequency (sample rate).
+static int GetHardwareFrequency(void)
 {
-	struct Mixer* mixer = (struct Mixer*) udata;
-	Mixer_Process(mixer, (int16_t*) stream, size / 2);
+	SDL_AudioStream* stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL, NULL, NULL);
+	CM_ASSERT(stream, SDL_GetError());
+
+	SDL_AudioSpec spec;
+	bool success = SDL_GetAudioStreamFormat(stream, NULL, &spec);
+	CM_ASSERT(success, SDL_GetError());
+
+	sdlDeviceID = SDL_GetAudioStreamDevice(stream);
+	CM_ASSERT(sdlDeviceID, SDL_GetError());
+	SDL_CloseAudioDevice(sdlDeviceID);
+
+	return spec.freq;
 }
 
 void cmixer_InitWithSDL(void)
 {
 	CM_ASSERT(!sdlAudioSubSystemInited, "SDL audio subsystem already inited");
 
-	if (0 != SDL_InitSubSystem(SDL_INIT_AUDIO))
+	if (!SDL_InitSubSystem(SDL_INIT_AUDIO))
 		CM_DIE(SDL_GetError());
 
 	sdlAudioSubSystemInited = true;
 
 	// Init SDL audio
-	SDL_AudioSpec fmt =
-	{
-		.freq = 44100,
-		.format = AUDIO_S16SYS,
-		.channels = 2,
-		.samples = 1024,
-		.callback = MixerCallback,
-		.userdata = &gMixer,
-	};
+	SDL_AudioSpec spec = {.format=SDL_AUDIO_S16, .channels=2, .freq=GetHardwareFrequency()};
+	SDL_AudioStream* stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, Mixer_Callback, &gMixer);
+	CM_ASSERT(stream, SDL_GetError());
 
-	SDL_AudioSpec got;
-	sdlDeviceID = SDL_OpenAudioDevice(NULL, 0, &fmt, &got, SDL_AUDIO_ALLOW_FREQUENCY_CHANGE);
-
+	sdlDeviceID = SDL_GetAudioStreamDevice(stream);
 	CM_ASSERT(sdlDeviceID, SDL_GetError());
 
-	// Init library
-	Mixer_Init(&gMixer, got.freq);
+	// Init mixer library
+	Mixer_Init(&gMixer, spec.freq);
 	Mixer_SetMasterGain(&gMixer, 0.5);
 
 	// Start audio
-	SDL_PauseAudioDevice(sdlDeviceID, 0);
+	SDL_ResumeAudioDevice(sdlDeviceID);
 }
 
 void cmixer_ShutdownWithSDL()
@@ -314,7 +324,7 @@ void cmixer_SetMasterGain(double newGain)
 
 static void Mixer_Init(struct Mixer* mixer, int newSamplerate)
 {
-	SDL_memset(mixer, 0, sizeof(mixer));
+	SDL_memset(mixer, 0, sizeof(*mixer));
 
 	mixer->sdlAudioMutex = SDL_CreateMutex();
 
@@ -370,13 +380,19 @@ static void Mixer_RemoveVoice(struct Mixer* mixer, CMVoice* voice)
 	}
 }
 
-static void Mixer_Process(struct Mixer* mixer, int16_t* dst, int len)
+static void SDLCALL Mixer_Callback(void* opaqueMixer, SDL_AudioStream *stream, int additionalAmount, int dontcare)
 {
+	(void) dontcare;
+
+	struct Mixer* mixer = (struct Mixer*) opaqueMixer;
+	const int sz = 2;
+
+	int len = additionalAmount / sz;
+
 	// Process in chunks of BUFFER_SIZE if `len` is larger than BUFFER_SIZE
 	while (len > BUFFER_SIZE)
 	{
-		Mixer_Process(mixer, dst, BUFFER_SIZE);
-		dst += BUFFER_SIZE;
+		Mixer_Callback(opaqueMixer, stream, BUFFER_SIZE * sz, -1);
 		len -= BUFFER_SIZE;
 	}
 
@@ -407,8 +423,11 @@ static void Mixer_Process(struct Mixer* mixer, int16_t* dst, int len)
 	for (int i = 0; i < len; i++)
 	{
 		int x = (mixer->pcmmixbuf[i] * mixer->gain) >> FX_BITS;
-		dst[i] = ClampInt(x, -32768, 32767);
+		mixer->pcmclipbuf[i] = ClampInt(x, -32768, 32767);
 	}
+
+	// Feed SDL audio stream
+	SDL_PutAudioStreamData(stream, mixer->pcmclipbuf, len * sz);
 }
 
 //-----------------------------------------------------------------------------

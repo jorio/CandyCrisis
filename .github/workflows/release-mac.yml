@@ -3,13 +3,13 @@ name: Release Mac
 on: [workflow_dispatch, workflow_call]
 
 env:
-  SDL2_VERSION: "2.28.1"
+  SDL_VERSION: "3.2.0"
   GAME_SHORTNAME: "CandyCrisis"
   GAME_LONGNAME: "Candy Crisis"
 
 jobs:
   release-mac:
-    runs-on: macos-11
+    runs-on: macos-latest
     timeout-minutes: 20
 
     steps:
@@ -20,22 +20,21 @@ jobs:
           echo CPU count = $NPROC
 
       - name: Import codesigning certs
-        uses: apple-actions/import-codesign-certs@v1
+        uses: apple-actions/import-codesign-certs@v3
         with:
           p12-file-base64: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_BASE64 }}
           p12-password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
 
       - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
+        uses: actions/checkout@v4
+        with: {submodules: 'recursive'}
 
-      - name: Get SDL2.framework
+      - name: Get SDL3.framework
         run: |
-          curl -LO https://github.com/libsdl-org/SDL/releases/download/release-${{env.SDL2_VERSION}}/SDL2-${{env.SDL2_VERSION}}.dmg
-          hdiutil attach SDL2-*.dmg
-          cp -a /Volumes/SDL2/SDL2.framework SDL2.framework
-          hdiutil detach /Volumes/SDL2
+          curl -LO https://github.com/libsdl-org/SDL/releases/download/release-${{env.SDL_VERSION}}/SDL3-${{env.SDL_VERSION}}.dmg
+          hdiutil attach SDL3-*.dmg
+          cp -a /Volumes/SDL3/SDL3.xcframework/macos-arm64_x86_64/SDL3.framework SDL3.framework
+          hdiutil detach /Volumes/SDL3
 
       - name: Configure
         run: cmake -S . -B build -G Xcode -DCODE_SIGN_IDENTITY=${{ secrets.APPLE_CODE_SIGN_IDENTITY }}
@@ -72,7 +71,7 @@ jobs:
         run: xcrun stapler staple build/${{env.ARTIFACT_NAME}}
 
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{env.ARTIFACT_NAME}}
           path: build/${{env.ARTIFACT_NAME}}

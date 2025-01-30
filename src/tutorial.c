@@ -422,9 +422,9 @@ void StartBalloon( const char *message )
 	balloonContentsRect.bottom -= 25;
 		
 	SurfaceGetEdges( balloonSurface, &balloonContentsRect );
-	SDL_FillRect( balloonSurface, 
-				  SDLU_MRectToSDLRect( &balloonContentsRect, &balloonContentsSDLRect ), 
-				  SDL_MapRGB( balloonSurface->format, 0xFF, 0xFF, 0xFF ) );
+	SDL_FillSurfaceRect( balloonSurface,
+						 SDLU_MRectToSDLRect( &balloonContentsRect, &balloonContentsSDLRect ),
+						 SDL_MapSurfaceRGB( balloonSurface, 0xFF, 0xFF, 0xFF ) );
 	SurfaceCurveEdges( balloonSurface, &balloonContentsRect );
 	
 	balloonTip.v = balloonContentsRect.bottom - 2;

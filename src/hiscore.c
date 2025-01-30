@@ -116,7 +116,7 @@ static void FadeScreen( SDL_Surface* hiScoreSurface, SDL_Surface* fadeSurface, i
 	SDL_Rect  fullSDLRect = { 0, 0, 640, 480 };
 	int       black;
 	
-	black = SDL_MapRGB( fadeSurface->format, 0, 0, 0 );
+	black = SDL_MapSurfaceRGB( fadeSurface, 0, 0, 0 );
 	
 	if( start < end )
 	{
@@ -156,7 +156,7 @@ static void FadeScreen( SDL_Surface* hiScoreSurface, SDL_Surface* fadeSurface, i
 					break;
 			
 				case 31:
-					SDL_FillRect( fadeSurface, &destSDLRect, black );
+					SDL_FillSurfaceRect( fadeSurface, &destSDLRect, black );
 					break;
 				
 				default:
@@ -278,7 +278,7 @@ void ShowHiscore( void )
 	
 	SDLU_ReleaseSurface( hiScoreSurface );
 	
-	SDL_FillRect( g_frontSurface, &g_frontSurface->clip_rect, SDL_MapRGB( g_frontSurface->format, 0, 0, 0 ));
+	SDL_FillSurfaceRect( g_frontSurface, &g_frontSurfaceClipRect, SDL_MapSurfaceRGB(g_frontSurface, 0, 0, 0) );
     SDLU_Present();
 	
 	SDLU_SetBrightness( 1.0f );	
@@ -292,8 +292,8 @@ void ShowHiscore( void )
 	
 	SDLU_SetBrightness( 0.0f );	
 
-	SDL_FreeSurface( hiScoreSurface );
-	SDL_FreeSurface( fadeSurface );
+	SDL_DestroySurface( hiScoreSurface );
+	SDL_DestroySurface( fadeSurface );
 }
 
 void InitPotentialCombos( void )

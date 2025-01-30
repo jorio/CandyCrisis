@@ -1,0 +1,78 @@
+name: Release AppImage
+
+on: [workflow_dispatch, workflow_call]
+
+env:
+  SDL_VERSION: "3.2.0"
+  APPIMAGETOOL_VERSION: "1.9.0"
+  GAME_SHORTNAME: "candycrisis"
+  GAME_LONGNAME: "Candy Crisis"
+
+jobs:
+  build-linux-appimage:
+    runs-on: ${{ matrix.platform.os }}
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:  # Use oldest available Ubuntu for maximum glibc compatibility
+          - { name: x86_64, os: ubuntu-22.04 }
+          - { name: aarch64, os: ubuntu-22.04-arm }
+
+    steps:
+      - name: Get CPU arch and count
+        run: |
+          NPROC=$(python3 -c 'import multiprocessing; print(multiprocessing.cpu_count())')
+          ARCH=$(uname -m)
+          echo "NPROC=$NPROC" >> $GITHUB_ENV
+          echo "ARCH=$ARCH" >> $GITHUB_ENV
+          echo CPU arch = $ARCH, CPU count = $NPROC
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with: { submodules: 'recursive' }
+
+      # cf. https://github.com/libsdl-org/SDL/blob/main/docs/README-linux.md
+      # + desktop-file-utils for appimagetool
+      - name: Get build dependencies for SDL from APT  
+        run: |
+          sudo apt update
+          sudo apt install -y libasound2-dev libpulse-dev \
+            libaudio-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
+            libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev \
+            libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
+            libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev fcitx-libs-dev \
+            desktop-file-utils
+
+      - name: Get SDL source
+        run: |
+          git clone --depth 1 --branch release-${{ env.SDL_VERSION }} https://github.com/libsdl-org/SDL
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SDL_FROM_SOURCE=1 -DSTATIC_SDL=1
+
+      - name: Prepare artifact names
+        run: |
+          GAME_VERSION=$(cat build/version.txt)
+          ARTIFACT_NAME="${{env.GAME_SHORTNAME}}-$GAME_VERSION-linux-${{env.ARCH}}.AppImage"
+          echo "GAME_VERSION=$GAME_VERSION" >> $GITHUB_ENV
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
+
+      - name: Build
+        run: cmake --build build -- -j ${{ env.NPROC }}
+
+      - name: Prepare AppDir
+        run: bash packaging/prepare_appimage_appdir.sh build/${{env.GAME_SHORTNAME}}
+
+      - name: Make AppImage
+        run: |
+          wget https://github.com/AppImage/appimagetool/releases/download/${{env.APPIMAGETOOL_VERSION}}/appimagetool-${{env.ARCH}}.AppImage
+          chmod +x appimagetool-${{env.ARCH}}.AppImage
+          ./appimagetool-${{env.ARCH}}.AppImage --no-appstream build/${{env.GAME_SHORTNAME}}.AppDir build/${{env.ARTIFACT_NAME}}
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{env.ARTIFACT_NAME}}
+          path: build/${{env.ARTIFACT_NAME}}

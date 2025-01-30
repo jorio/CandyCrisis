@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include "MTypes.h"
 
 #define BLUE_MASK          0x0000FF
@@ -32,6 +32,7 @@ void         SDLU_CreateRendererTexture();
 SDL_Rect*    SDLU_MRectToSDLRect( const MRect* in, SDL_Rect* out );
 MRect*       SDLU_SDLRectToMRect( const SDL_Rect* in, MRect* out );
 int          SDLU_BlitSurface( SDL_Surface* src, SDL_Rect* srcrect, SDL_Surface* dst, SDL_Rect* dstrect );
+int          SDLU_BlitSurface1to1( SDL_Surface* src, SDL_Surface* dst );
 void         SDLU_GetPixel( SDL_Surface* surface, int x, int y, SDL_Color* pixel );
 void         SDLU_ChangeSurfaceDepth( SDL_Surface** surface, int depth );
 SDL_Surface* SDLU_InitSurface( SDL_Rect* rect, int depth );

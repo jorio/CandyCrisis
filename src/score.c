@@ -96,8 +96,9 @@ void ShowScore( int player )
 				
 		SDLU_AcquireSurface( scoreSurface );
 		
-		SDLU_BlitSurface( boardSurface[player], &scoreSurface->clip_rect,
-				 		  scoreSurface,         &scoreSurface->clip_rect   );
+		SDL_GetSurfaceClipRect( scoreSurface, &sourceSDLRect );
+		SDLU_BlitSurface( boardSurface[player], &sourceSDLRect,
+				 		  scoreSurface,         &sourceSDLRect );
 		
 		myRect.top = 0;
 		myRect.left = 2;

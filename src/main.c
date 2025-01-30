@@ -245,6 +245,7 @@
 //                 2.0.0 INITIAL RELEASE
 //
 
+#include <SDL3/SDL_main.h>
 #include "SDLU.h"
 #include "version.h"
 
@@ -288,6 +289,7 @@ SDL_Renderer* g_renderer;
 SDL_Window*   g_window;
 SDL_Texture*  g_windowTexture;
 SDL_Surface*  g_frontSurface;
+SDL_Rect      g_frontSurfaceClipRect;
 SDL_Rect      g_widescreenCrop = {0,60,640,360};
 signed char  nextA[2], nextB[2], nextM[2], nextG[2], colorA[2], colorB[2],
 	         blobX[2], blobY[2], blobR[2], blobSpin[2], speed[2], role[2], halfway[2],
@@ -455,7 +457,7 @@ void WaitForRelease( void )
 MBoolean AnyKeyIsPressed( void )
 {
 	int arraySize;
-    const Uint8* pressedKeys;
+    const bool* pressedKeys;
     
     SDLU_PumpEvents();
     pressedKeys = SDL_GetKeyboardState( &arraySize );
@@ -477,7 +479,7 @@ MBoolean AnyKeyIsPressed( void )
 MBoolean ControlKeyIsPressed( void )
 {
     int arraySize;
-    const Uint8* pressedKeys;
+    const bool* pressedKeys;
     
     SDLU_PumpEvents();
     pressedKeys = SDL_GetKeyboardState( &arraySize );
@@ -488,7 +490,7 @@ MBoolean ControlKeyIsPressed( void )
 MBoolean OptionKeyIsPressed( void )
 {
     int arraySize;
-    const Uint8* pressedKeys;
+    const bool* pressedKeys;
     
     SDLU_PumpEvents();
     pressedKeys = SDL_GetKeyboardState( &arraySize );
@@ -499,7 +501,7 @@ MBoolean OptionKeyIsPressed( void )
 MBoolean DeleteKeyIsPressed( void )
 {
     int arraySize;
-    const Uint8* pressedKeys;
+    const bool* pressedKeys;
     
     SDLU_PumpEvents();
     pressedKeys = SDL_GetKeyboardState( &arraySize );
@@ -558,7 +560,7 @@ void ReserveMonitor( void )
     int resH = widescreen? 360: 480;
 
     SDL_Rect displayBounds = { .x = 0, .y = 0, .w = 640, .h = 480 };
-    SDL_GetDisplayUsableBounds(0, &displayBounds);
+	SDL_GetDisplayUsableBounds(1, &displayBounds);
     float scaleX = (displayBounds.w * 75/100) / (float)resW;	// allow covering at most 95% of the screen
     float scaleY = (displayBounds.h * 75/100) / (float)resH;
     float scale = scaleX < scaleY ? scaleX : scaleY;
@@ -566,18 +568,20 @@ void ReserveMonitor( void )
         scale = (int) scale;
     scale = scale < 1 ? 1 : scale;
 
-    SDL_CreateWindowAndRenderer(resW*scale, resH*scale, SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI, &g_window, &g_renderer);
+    SDL_CreateWindowAndRenderer("Candy Crisis (source port v" PROJECT_VERSION ")",
+								resW*scale, resH*scale,
+								SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY,
+								&g_window, &g_renderer);
 
-    SDL_RenderSetLogicalSize(g_renderer, resW, resH);
-    SDL_SetWindowTitle(g_window, "Candy Crisis (source port v" PROJECT_VERSION ")");
+	SDL_SetRenderLogicalPresentation(g_renderer, resW, resH, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
-    SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, 255);
+    SDL_SetRenderDrawColor(g_renderer, 0, 255, 0, 255);
     SDL_RenderClear(g_renderer);
     SDL_RenderPresent(g_renderer);
-    
-    g_frontSurface = SDL_CreateRGBSurface(0, 640, 480, 32,
-                                          RED_MASK, GREEN_MASK, BLUE_MASK, 0);
-    
+
+	g_frontSurface = SDL_CreateSurface(640, 480, SDL_PIXELFORMAT_XRGB8888);
+	SDL_GetSurfaceClipRect(g_frontSurface, &g_frontSurfaceClipRect);
+
 	SDLU_CreateRendererTexture();
 
     SetFullscreen(fullscreen);
@@ -589,7 +593,7 @@ void ReleaseMonitor( void )
 
 void SetFullscreen( MBoolean fullscreenMode )
 {
-    SDL_SetWindowFullscreen(g_window, fullscreenMode? SDL_WINDOW_FULLSCREEN_DESKTOP: 0);
+	SDL_SetWindowFullscreen(g_window, fullscreenMode);
 }
 
 int Warp( void )
@@ -673,14 +677,12 @@ dataPathFound:
 	SDL_free(basePath);
 #endif
 
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
+	if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
 	{
 		Error("SDL_Init failed");
 	}
 
-	atexit(SDL_Quit);
-
-    SDLU_Init();
+	SDLU_Init();
 }
 
 void QuickFadeIn( MRGBColor *color )
@@ -727,13 +729,13 @@ void QuickFadeOut( MRGBColor *color )
 
 MBoolean FileExists( const char* name )
 {
-	SDL_RWops* f = SDL_RWFromFile( name, "rb" );
+	SDL_IOStream* f = SDL_IOFromFile( name, "rb" );
 	if( f == NULL )
 	{
 		return false;
 	}
 	
-	SDL_RWclose( f );
+	SDL_CloseIO( f );
 	return true;
 }
 

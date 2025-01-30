@@ -31,14 +31,16 @@ static SkittlesFontPtr LoadFont( SkittlesFontPtr font, int pictID, unsigned char
 		sdlRect.w = temporarySurface->w;
 		
 		font->surface = SDLU_InitSurface( &sdlRect, 8 );
+
+		SDLU_BlitSurface(  temporarySurface, &sdlRect,
+		                   font->surface,    &sdlRect  );
 		
-		SDLU_BlitSurface(  temporarySurface, &temporarySurface->clip_rect,
-		                   font->surface,    &temporarySurface->clip_rect  );
+		SDL_DestroySurface( temporarySurface );
 		
-		SDL_FreeSurface( temporarySurface );
+		SDL_assert( font->surface->pixels );
 		
-		white    = SDL_MapRGB( font->surface->format, 0xFF, 0xFF, 0xFF );
-		lastLine = (unsigned char*) font->surface->pixels + (font->surface->pitch * (font->surface->h - 1));
+		white    = SDL_MapSurfaceRGB( font->surface, 0xFF, 0xFF, 0xFF );
+		lastLine = (uint8_t*) font->surface->pixels + (font->surface->pitch * (font->surface->h - 1));
 		across   = 0;
 		
 		// Measure empty space between character breaks

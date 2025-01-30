@@ -295,7 +295,7 @@ void PlaceGrenade( int player )
 				if( grid[player][x][y] == color )
 				{
 					suction[player][x][y] = kInDeath;
-					death[player][x][y] = -abs( x - currentX + y - currentY );
+					death[player][x][y] = -SDL_abs( x - currentX + y - currentY );
 					multiplier++;
 					
 					if( (x <= (kGridAcross-2)) && (grid[player][x+1][y] == kGray) )
@@ -342,7 +342,7 @@ void PlaceGrenade( int player )
 					         grid[player][x][y] <= kLastBlob     )
 					{
 						suction[player][x][y] = kInDeath;
-						death[player][x][y] = -abs( x - currentX + y - currentY );
+						death[player][x][y] = -SDL_abs( x - currentX + y - currentY );
 						multiplier++;
 					}
 				}

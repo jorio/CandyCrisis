@@ -3,7 +3,7 @@ name: Release Windows
 on: [workflow_dispatch, workflow_call]
 
 env:
-  SDL2_VERSION: "2.28.1"
+  SDL_VERSION: "3.2.0"
   GAME_SHORTNAME: "CandyCrisis"
   GAME_LONGNAME: "Candy Crisis"
 
@@ -14,15 +14,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
+        uses: actions/checkout@v4
+        with: {submodules: 'recursive'}
 
       - name: Get SDL
         run: |
-          Invoke-WebRequest -OutFile SDL2-VC.zip -Uri https://github.com/libsdl-org/SDL/releases/download/release-${{env.SDL2_VERSION}}/SDL2-devel-${{env.SDL2_VERSION}}-VC.zip
-          Expand-Archive SDL2-VC.zip
-          move SDL2-VC/SDL2-* SDL2
+          Invoke-WebRequest -OutFile SDL3-VC.zip -Uri https://github.com/libsdl-org/SDL/releases/download/release-${{env.SDL_VERSION}}/SDL3-devel-${{env.SDL_VERSION}}-VC.zip
+          Expand-Archive SDL3-VC.zip
+          move SDL3-VC/SDL3-* SDL3
 
       - name: Configure
         run: cmake -S . -B build -G 'Visual Studio 17 2022'
@@ -52,7 +51,7 @@ jobs:
           Compress-Archive -Path "build/${{env.FOLDER_NAME}}" -DestinationPath build/${{env.ARTIFACT_NAME}} -CompressionLevel Optimal
 
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{env.ARTIFACT_NAME}}
           path: build/${{env.ARTIFACT_NAME}}

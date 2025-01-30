@@ -118,8 +118,10 @@ void SurfaceBlitMask( SDL_Surface* object,     SDL_Surface* mask,     SDL_Surfac
 	int            startX = 0, startY = 0, endX, endY, x, y, srcRowBytes, mskRowBytes, dstRowBytes;
 	unsigned char *src, *msk, *dst;
 	MRect          destBounds;
+	SDL_Rect       destClipRect;
 
-	SDLU_SDLRectToMRect( &dest->clip_rect, &destBounds );
+	SDL_GetSurfaceClipRect( dest, &destClipRect );
+	SDLU_SDLRectToMRect( &destClipRect, &destBounds );
 	
 	endX = objectRect->right - objectRect->left;
 	endY = objectRect->bottom - objectRect->top;
@@ -188,12 +190,14 @@ void SurfaceBlitColor( SDL_Surface* mask,     SDL_Surface* dest,
 {
 	int            startX = 0, startY = 0, endX, endY, x, y, mskRowBytes, dstRowBytes;
 	unsigned char *msk, *dst;
+	SDL_Rect       destSDLRect;
 	MRect          destBounds;
 	
 	endX = maskRect->right - maskRect->left;
 	endY = maskRect->bottom - maskRect->top;
 	
-	SDLU_SDLRectToMRect( &dest->clip_rect, &destBounds );
+	SDL_GetSurfaceClipRect( dest, &destSDLRect );
+	SDLU_SDLRectToMRect( &destSDLRect, &destBounds );
 
 	if( destRect->left   > destBounds.right  ||			// completely clipped?
 		destRect->right  < destBounds.left   ||
@@ -257,11 +261,13 @@ void SurfaceBlitAlpha( SDL_Surface* back,     SDL_Surface* source,     SDL_Surfa
 	int startX = 0, startY = 0, endX, endY, x, y, srcRowBytes, alfRowBytes, dstRowBytes, bckRowBytes;
 	unsigned char *bck, *src, *alf, *dst;
 	MRect destBounds;
+	SDL_Rect destSDLRect;
 	
 	endX = sourceRect->right - sourceRect->left;
 	endY = sourceRect->bottom - sourceRect->top;
 	
-	SDLU_SDLRectToMRect( &dest->clip_rect, &destBounds );
+	SDL_GetSurfaceClipRect( dest, &destSDLRect );
+	SDLU_SDLRectToMRect( &destSDLRect, &destBounds );
 
 	if( destRect->left   > destBounds.right  ||			// completely clipped?
 		destRect->right  < destBounds.left   ||
@@ -348,11 +354,13 @@ void SurfaceBlitWeightedDualAlpha(SDL_Surface* back,     SDL_Surface* source,   
 	    srcRowBytes, alfRowBytes, mskRowBytes, dstRowBytes, bckRowBytes;
 	unsigned char *bck, *src, *alf, *msk, *dst;
 	MRect destBounds;
+	SDL_Rect destSDLRect;
 
 	endX = sourceRect->right - sourceRect->left;
 	endY = sourceRect->bottom - sourceRect->top;
 	
-	SDLU_SDLRectToMRect( &dest->clip_rect, &destBounds );
+	SDL_GetSurfaceClipRect( dest, &destSDLRect );
+	SDLU_SDLRectToMRect( &destSDLRect, &destBounds );
 	
 	if( destRect->left   > destBounds.right  ||			// completely clipped?
 		destRect->right  < destBounds.left   ||
@@ -465,13 +473,15 @@ void SurfaceBlitWeightedCharacter( SkittlesFontPtr font, unsigned char text, MPo
     int            dstRowBytes;
     int            index;
     MRect          destBounds;
+	SDL_Rect       destSDLRect;
     
     int height = font->surface->h;
     int width  = font->width[text];
     int across = font->across[text];
     
     destSurface = SDLU_GetCurrentSurface();
-    SDLU_SDLRectToMRect( &destSurface->clip_rect, &destBounds );
+	SDL_GetSurfaceClipRect( destSurface, &destSDLRect );
+    SDLU_SDLRectToMRect( &destSDLRect, &destBounds );
     
     if( (dPoint->h + width)  > destBounds.right           ||      // clipped?
         (dPoint->v + height) > destBounds.bottom          || 
@@ -532,13 +542,15 @@ void SurfaceBlitCharacter( SkittlesFontPtr font, unsigned char text, MPoint *dPo
 	int             index;
 	int             rgbPremixed;
 	MRect           destBounds;
+	SDL_Rect        destSDLRect;
 	
 	int height = font->surface->h;
 	int width  = font->width[text];
 	int across = font->across[text];
 	
 	destSurface = SDLU_GetCurrentSurface();
-	SDLU_SDLRectToMRect( &destSurface->clip_rect, &destBounds );	
+	SDL_GetSurfaceClipRect( destSurface, &destSDLRect );
+	SDLU_SDLRectToMRect( &destSDLRect, &destBounds );
 	
 	if( (dPoint->h + width)  > destBounds.right           ||      // clipped?
 	    (dPoint->v + height) > destBounds.bottom          || 
@@ -651,8 +663,10 @@ void SurfaceBlitColorOver( SDL_Surface* source,     SDL_Surface* dest,
 	unsigned char* src;
 	unsigned char* dst;
 	MRect          destBounds;
+	SDL_Rect       destSDLRect;
 	
-	SDLU_SDLRectToMRect( &dest->clip_rect, &destBounds );
+	SDL_GetSurfaceClipRect( dest, &destSDLRect );
+	SDLU_SDLRectToMRect( &destSDLRect, &destBounds );
 	
 	endX = destRect->right - destRect->left;
 	endY = destRect->bottom - destRect->top;
@@ -730,9 +744,11 @@ void SurfaceBlitBlendOver(SDL_Surface* source,     SDL_Surface* dest,
 	int width, height, dstRowBytes, srcRowBytes;
 	unsigned char *src, *dst;
 	MRect destBounds;
+	SDL_Rect       destSDLRect;
 	MBoolean oddX = false;
-
-	SDLU_SDLRectToMRect( &dest->clip_rect, &destBounds );
+	
+	SDL_GetSurfaceClipRect( dest, &destSDLRect );
+	SDLU_SDLRectToMRect( &destSDLRect, &destBounds );
 	
 	if( destRect->left   > destBounds.right  ||			// completely clipped?
 		destRect->right  < destBounds.left   ||

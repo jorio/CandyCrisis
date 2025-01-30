@@ -186,7 +186,7 @@ redo:
 	
 	// make background surface
 	gameStartSurface     = LoadPICTAsSurface( picGameStart, 32 );
-	black = SDL_MapRGB( gameStartSurface->format, 0, 0, 0 );
+	black = SDL_MapSurfaceRGB( gameStartSurface, 0, 0, 0 );
 
 	// make cursor backing store
 #if USE_CURSOR_SPRITE
@@ -198,13 +198,12 @@ redo:
 	gameStartDrawSurface = SDLU_InitSurface( &backdropSDLRect, 32 );
 	if (!useNewTitle)
 	{
-		SDLU_BlitSurface(gameStartSurface, &gameStartSurface->clip_rect,
-						 gameStartDrawSurface, &gameStartDrawSurface->clip_rect);
+		SDLU_BlitSurface1to1(gameStartSurface, gameStartDrawSurface);
 	}
 	else
 	{
 		// Prepare new title screen
-		SDL_FillRect(gameStartDrawSurface, &gameStartDrawSurface->clip_rect, black);
+		SDL_FillSurfaceRect(gameStartDrawSurface, &backdropSDLRect, black);
 
 		// Copy logo from original title screen to where we want it
 		SDL_Rect r1 = {0, 0, 640, 150};
@@ -212,7 +211,7 @@ redo:
 		SDLU_BlitSurface(gameStartSurface, &r1, gameStartDrawSurface, &r2);
 
 		// Now we're going to draw title items on gameStartSurface
-		SDL_FillRect(gameStartSurface, &gameStartSurface->clip_rect, black);
+		SDL_FillSurfaceRect(gameStartSurface, &backdropSDLRect, black);
 		SDLU_AcquireSurface(gameStartSurface);
 
 		SkittlesFontPtr font = GetFont(picFont);
@@ -318,7 +317,7 @@ redo:
 		{
 			if( splatState[blob] == kFallingSplat )
 			{
-				SDL_FillRect( gameStartDrawSurface, SDLU_MRectToSDLRect( &splatBlob[blob], &destSDLRect ), black );
+				SDL_FillSurfaceRect( gameStartDrawSurface, SDLU_MRectToSDLRect( &splatBlob[blob], &destSDLRect ), black );
 				UnionMRect( &drawRect[splatSide[blob]], &splatBlob[blob], &drawRect[splatSide[blob]] );
 				
 				OffsetMRect( &splatBlob[blob], 0, startSkip * (6 + (splatBlob[blob].bottom / 20)) );
@@ -331,12 +330,12 @@ redo:
 					{
 						chunkRect = splatBlob[blob];
 						GetZapStyle( 0, &chunkRect, &splatColor[blob], &chunkType, splat, splatState[blob]-kIncrementPerFrame, kSplatType );
-						SDL_FillRect( gameStartDrawSurface, SDLU_MRectToSDLRect( &chunkRect, &destSDLRect ), black );
+						SDL_FillSurfaceRect( gameStartDrawSurface, SDLU_MRectToSDLRect( &chunkRect, &destSDLRect ), black );
 						UnionMRect( &drawRect[splatSide[blob]], &chunkRect, &drawRect[splatSide[blob]] );
 					}
 				}
 				
-				SDL_FillRect( gameStartDrawSurface, SDLU_MRectToSDLRect( &splatBlob[blob], &destSDLRect ), black );
+				SDL_FillSurfaceRect( gameStartDrawSurface, SDLU_MRectToSDLRect( &splatBlob[blob], &destSDLRect ), black );
 				UnionMRect( &drawRect[splatSide[blob]], &splatBlob[blob], &drawRect[splatSide[blob]] );
 			}
 		}
@@ -349,7 +348,7 @@ redo:
 			int mBright = missBright[count];
             if( bright || mBright )
 			{
-                SDL_FillRect( gameStartDrawSurface, &meterRect[count], black );
+                SDL_FillSurfaceRect( gameStartDrawSurface, &meterRect[count], black );
                 UnionMRect( &drawRect[count], SDLU_SDLRectToMRect( &meterRect[count], &tempRect ), &drawRect[count] );
                 
                 if( mBright > 1 )
@@ -515,7 +514,7 @@ redo:
 		// Copy down everything		
 		if( shouldFullRepaint )
 		{
-			SDLU_BlitFrontSurface( gameStartDrawSurface, &gameStartDrawSurface->clip_rect, &gameStartDrawSurface->clip_rect );
+			SDLU_BlitFrontSurface( gameStartDrawSurface, &backdropSDLRect, &backdropSDLRect );
 			shouldFullRepaint = false;
 		}
 		else
@@ -569,10 +568,10 @@ redo:
 			break;
 	}
 
-	SDL_FreeSurface( gameStartSurface );
-	SDL_FreeSurface( gameStartDrawSurface );
+	SDL_DestroySurface( gameStartSurface );
+	SDL_DestroySurface( gameStartDrawSurface );
 #if USE_CURSOR_SPRITE
-	SDL_FreeSurface( cursorBackSurface );
+	SDL_DestroySurface( cursorBackSurface );
 #endif
 	
 	QuickFadeOut( NULL );
@@ -712,7 +711,7 @@ void DrawStage( void )
 			SDLU_BlitFrontSurface( levelSurface, &sourceSDLRect, &destSDLRect );
 			
 			SDLU_ReleaseSurface( levelSurface );
-			SDL_FreeSurface( levelSurface );
+			SDL_DestroySurface( levelSurface );
 						
 			break;
 	}
@@ -835,8 +834,7 @@ void PrepareStageGraphics( int type )
 	// side over to the right side. This way, if DrawPICTInSurface flunks,
 	// we still have a valid picture.
 	
-	SDLU_BlitSurface( boardSurface[0], &boardSurface[0]->clip_rect,
-	                  boardSurface[1], &boardSurface[1]->clip_rect  );
+	SDLU_BlitSurface1to1( boardSurface[0], boardSurface[1] );
 	
 	DrawPICTInSurface( boardSurface[1], picBoardRight + backgroundID );	
 
@@ -1235,8 +1233,8 @@ void SharewareVictory( void )
 out:
 	QuickFadeOut( NULL );	
 	
-	SDL_FreeSurface( backBuffer );
-	SDL_FreeSurface( frontBuffer );
+	SDL_DestroySurface( backBuffer );
+	SDL_DestroySurface( frontBuffer );
 }
 
 void RegisteredVictory( void )
@@ -1419,8 +1417,8 @@ void RegisteredVictory( void )
 		QuickFadeOut( NULL );
 	}
 	
-	SDL_FreeSurface( backBuffer  );
-	SDL_FreeSurface( frontBuffer );
+	SDL_DestroySurface( backBuffer  );
+	SDL_DestroySurface( frontBuffer );
 }
 
 void TotalVictory( void )

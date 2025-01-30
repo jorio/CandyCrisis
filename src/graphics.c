@@ -164,7 +164,7 @@ void DrawBackdrop( void )
 
 void ShowTitle( void )
 {
-    SDL_FillRect( g_frontSurface, &g_frontSurface->clip_rect, SDL_MapRGB( g_frontSurface->format, 0, 0, 0 ) );
+	SDL_FillSurfaceRect( g_frontSurface, &g_frontSurfaceClipRect, SDL_MapSurfaceRGB( g_frontSurface, 0, 0, 0 ) );
     SDLU_Present();
 
     RetrieveResources( );
@@ -197,7 +197,7 @@ void ShowTitle( void )
 		
 	QuickFadeOut( NULL );
 	
-	SDL_FillRect( g_frontSurface, &g_frontSurface->clip_rect, SDL_MapRGB( g_frontSurface->format, 0, 0, 0 ) );
+	SDL_FillSurfaceRect( g_frontSurface, &g_frontSurfaceClipRect, SDL_MapSurfaceRGB( g_frontSurface, 0, 0, 0 ) );
     SDLU_Present();
 }
 

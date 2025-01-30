@@ -1143,13 +1143,11 @@ void HandleDialog( int type )
 	// Get a copy of the current game window contents
 	backSurface      = SDLU_InitSurface( &fullSDLRect, 32 );
 	
-	SDLU_BlitSurface( g_frontSurface, &g_frontSurface->clip_rect,
-	                  backSurface,  &backSurface->clip_rect );
+	SDLU_BlitSurface1to1( g_frontSurface, backSurface );
 		
 	drawSurface      = SDLU_InitSurface( &fullSDLRect, 32 );
 
-	SDLU_BlitSurface( backSurface, &backSurface->clip_rect,
-	                  drawSurface, &drawSurface->clip_rect  );
+	SDLU_BlitSurface1to1( backSurface, drawSurface );
 
 	//
 		
@@ -1280,11 +1278,11 @@ void HandleDialog( int type )
     SDLU_Present();
 
 	// Dispose the GWorlds and fonts we used
-	SDL_FreeSurface( backSurface );
-	SDL_FreeSurface( drawSurface );
-	SDL_FreeSurface( logoSurface );
-	SDL_FreeSurface( logoAlphaSurface );
-	SDL_FreeSurface( logoMaskSurface );
+	SDL_DestroySurface( backSurface );
+	SDL_DestroySurface( drawSurface );
+	SDL_DestroySurface( logoSurface );
+	SDL_DestroySurface( logoAlphaSurface );
+	SDL_DestroySurface( logoMaskSurface );
 			
 	switch( dialogItem )
 	{

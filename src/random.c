@@ -21,7 +21,7 @@ void InitRandom( int inNumPieces )
 	int count, swap, swapWith;
 	
 	numPieces = inNumPieces;
-	randomSeed[0] = randomSeed[1] = SDL_GetTicks();
+	randomSeed[0] = randomSeed[1] = (unsigned int) SDL_GetTicks();
 	pieceCount[0] = pieceCount[1] = 0;
 	grenadeTimer[0] = grenadeTimer[1] = 40;
 	
